@@ -34,7 +34,11 @@ class ESP300(QtGui.QWidget):
         """
         self.pushButton_Connect.clicked.connect(self.connect)
         self.pushButton_TraceCircle.clicked.connect(self.TraceCircle)
+        self.pushButton_TraceLine.clicked.connect(self.TraceLine)
         self.pushButton_ReadCenter.clicked.connect(self.ReadCenter)
+        self.pushButton_ReadCurrentLine.clicked.connect(self.ReadCurrentLine)
+        self.pushButton_ReadCurrentRect.clicked.connect(self.ReadCurrentRect)
+
         self.pushButton_Joystick.clicked.connect(self.joystick_on)
         self.pushButton_X_move_n.clicked.connect(self.move_X_n)
         self.pushButton_X_move_p.clicked.connect(self.move_X_p)
@@ -59,14 +63,55 @@ class ESP300(QtGui.QWidget):
             time.sleep(delay)
             self.ui.progressBar_Circle.setValue(100*(i+1)/(nsteps+1))
         self.ui.showMessage (self, 'Circle tracing complete')
-            
+
+
+    def TraceLine (self) :
+        startY = self.ui.lineEdit_LineStartY.text().toFloat()[0]
+        startZ = self.ui.lineEdit_LineStartZ.text().toFloat()[0]
+        endY =  self.ui.lineEdit_LineEndY.text().toFloat()[0]
+        endZ =  self.ui.lineEdit_LineEndZ.text().toFloat()[0]
+        nsteps = self.ui.lineEdit_LineSegments.text().toInt()[0]
+        zytraj = self.generate_line_trajectory([startZ,startY],[endZ,endY],nsteps)
+        delay = self.ui.lineEdit_LineDelay.text().toFloat()[0]
+
+        for i in range(nsteps):
+            #move motor 2
+            self.move_one_motor(self.ser, 2, zytraj[i,0])
+            #move motor 3
+            self.move_one_motor(self.ser, 3, zytraj[i,1])
+            self.ui.progressBar_Circle.setValue(100.*(i+1)/nsteps)
+            time.sleep(delay)
+
+
+        infostring = "Line tracing complete"
+        self.showMessage (infostring)
+
+
+
     def ReadCenter (self):
         print "Read center"
         if self.ser.isOpen():  
             pos=self.read_position(self.ser)
             self.display_circle_center(pos)
         else:
-            self.showMessage (self, 'Establish connection with the controller first')
+            self.showMessage ('Establish connection with the controller first')
+
+    def ReadCurrentLine (self):
+        print "Read current loc and place at start YZ"
+        if self.ser.isOpen():
+            pos=self.read_position(self.ser)
+            self.display_line_start(pos)
+        else:
+            self.showMessage ('Establish connection with the controller first')
+
+    def ReadCurrentRect (self):
+        print "Read current loc and place at upper left YZ"
+        if self.ser.isOpen():
+            pos=self.read_position(self.ser)
+            self.display_rect_upperLeft(pos)
+        else:
+            self.showMessage ('Establish connection with the controller first')
+
 
     def Joystick (self):
         print "Joystick"
@@ -80,6 +125,20 @@ class ESP300(QtGui.QWidget):
             traj[i,0]=x
             traj[i,1]=y
         return traj
+
+    def generate_line_trajectory (self, xy0, xy1,  steps) :
+        ydist = xy1[1] - xy0[1]
+        xdist = xy1[0] - xy0[0]
+        dist = math.sqrt(xdist * xdist + ydist * ydist)
+        dinc = dist / float(steps-1)
+        xinc = xdist / float(steps-1)
+        yinc = ydist / float(steps-1)
+        xytraj = np.zeros ((steps,2),dtype=np.float32)
+        for i in range (steps) :
+            xytraj [i,0] = xy0[0] + xinc * i
+            xytraj [i,1] = xy0[1] + yinc * i
+        return xytraj
+
         
 
     def read_position(self, ser):
@@ -184,6 +243,16 @@ class ESP300(QtGui.QWidget):
             self.lineEdit_CircleX.setText("{:10.4f}".format(positions[0]))
             self.lineEdit_CircleY.setText("{:10.4f}".format(positions[1]))
             self.lineEdit_CircleZ.setText("{:10.4f}".format(positions[2]))
+
+    def display_rect_upperLeft (self, positions):
+            #self.lineEdit_CircleX.setText("{:10.4f}".format(positions[0]))
+            self.lineEdit_BoxStartY.setText("{:10.4f}".format(positions[1]))
+            self.lineEdit_BoxStartZ.setText("{:10.4f}".format(positions[2]))
+
+    def display_line_start (self, positions):
+            #self.lineEdit_CircleX.setText("{:10.4f}".format(positions[0]))
+            self.lineEdit_LineStartY.setText("{:10.4f}".format(positions[1]))
+            self.lineEdit_LineStartZ.setText("{:10.4f}".format(positions[2]))
             
     def connect(self, ser):
         if self.pushButton_Connect.text() == 'Connect':
@@ -235,8 +304,12 @@ class ESP300(QtGui.QWidget):
         Step = self.lineEdit_step_Z.text()
         target=float(Pos)+float(Step)
         self.move_one_motor(self.ser, 3, target)
-    #--------------------------------------
-       
+    #------------------------------------
+
+    def showMessage (self, infostring) :
+        QtGui.QMessageBox.information (self, "LaserCutting : Info", infostring)
+
+
 if __name__=='__main__':
     app = QtGui.QApplication(sys.argv)
     ESP300 = ESP300()
