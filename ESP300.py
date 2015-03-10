@@ -57,12 +57,20 @@ class ESP300(QtGui.QWidget):
         delay   = float(self.lineEdit_CircleDelay.text())
         nsteps  = float(self.lineEdit_CircleSegments.text())
         traj=self.generate_circle_trajectory ([Y,Z], radius, nsteps)
-        for i in range(0, int(nsteps)):
-            print 'progress', float(i)/int(nsteps)*100.0,'%'
-            self.move_one_motor(self.ser, 2, traj[i,0])
-            self.move_one_motor(self.ser, 3, traj[i,1])
-            time.sleep(delay)
-            self.ui.progressBar_Circle.setValue(100*(i+1)/(nsteps+1))
+        npasses = self.ui.comboBox_CirclePasses.currentIndex() + 1
+
+        fraction = 1. / float(npasses) * 100
+        for iter in range (npasses) :
+            totaldone = fraction * iter
+
+            for i in range(0, int(nsteps)):
+                #print 'progress', float(i)/int(nsteps)*100.0,'%'
+                self.move_one_motor(self.ser, 2, traj[i,0])
+                self.move_one_motor(self.ser, 3, traj[i,1])
+                time.sleep(delay)
+                progress = totaldone + fraction * float (i+1)/(nsteps)
+                self.ui.progressBar_Circle.setValue(progress)
+
         self.ui.showMessage (self, 'Circle tracing complete')
 
 
@@ -85,7 +93,7 @@ class ESP300(QtGui.QWidget):
                     self.move_one_motor(self.ser, 3, zytraj[i,0])
                     #move motor 3
                     self.move_one_motor(self.ser, 2, zytraj[i,1])
-                    print "motor 2 : %5.3f   motor 3: %5.3f" % (zytraj [i,0], zytraj[i,1])
+                    #print "motor 2 : %5.3f   motor 3: %5.3f" % (zytraj [i,0], zytraj[i,1])
                     progress = fraction * float(i+1)/nsteps + totaldone
                     self.ui.progressBar_Circle.setValue(progress)
                     time.sleep(delay)
@@ -95,7 +103,7 @@ class ESP300(QtGui.QWidget):
                     self.move_one_motor(self.ser, 3, zytraj[i,0])
                     #move motor 3
                     self.move_one_motor(self.ser, 2, zytraj[i,1])
-                    print "motor 2 : %5.3f   motor 3: %5.3f" % (zytraj [i,0], zytraj[i,1])
+                    #print "motor 2 : %5.3f   motor 3: %5.3f" % (zytraj [i,0], zytraj[i,1])
                     progress = fraction * float(nsteps-i-1)/nsteps + totaldone
                     self.ui.progressBar_Circle.setValue(100.*(i+1)/nsteps)
                     time.sleep(delay)
