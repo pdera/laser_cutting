@@ -77,10 +77,10 @@ class ESP300(QtGui.QWidget):
 
     def TraceRect (self) :
         # get the vertices of the coordinates
-        Y_ul = self.ui.lineEdit_LineStartY.text().toFloat()[0]
-        Z_ul = self.ui.lineEdit_LineStartZ.text().toFloat()[0]
-        Y_lr = self.ui.lineEdit_LineEndY.text().toFloat()[0]
-        Z_lr = self.ui.lineEdit_LineEndZ.text().toFloat()[0]
+        Y_ul = self.ui.lineEdit_BoxStartY.text().toFloat()[0]
+        Z_ul = self.ui.lineEdit_BoxStartZ.text().toFloat()[0]
+        Y_lr = self.ui.lineEdit_BoxEndY.text().toFloat()[0]
+        Z_lr = self.ui.lineEdit_BoxEndZ.text().toFloat()[0]
         Y_ur = Y_ul
         Z_ur = Z_lr
         Y_ll = Y_lr
@@ -109,31 +109,37 @@ class ESP300(QtGui.QWidget):
         nsteps = self.ui.lineEdit_RectSegments.text().toInt()[0]
         delay = self.ui.lineEdit_RectDelay.text().toFloat()[0]
         npasses = self.ui.comboBox_LinePasses.currentIndex() + 1
-        xytraj_0 = self.generate_line_trajectory(seg0start, seg0end,nsteps*frac0)
-        xytraj_1 = self.generate_line_trajectory(seg1start, seg1end,nsteps*frac1)
-        xytraj_2 = self.generate_line_trajectory(seg2start, seg2end,nsteps*frac2)
-        xytraj_3 = self.generate_line_trajectory(seg3start, seg3end,nsteps*frac3)
+        steps0 = int(nsteps * frac0)
+        steps1 = int(nsteps * frac1)
+        steps2 = int(nsteps * frac2)
+        steps3 = int(nsteps * frac3)
+        xytraj_0 = self.generate_line_trajectory(seg0start, seg0end,steps0)
+        xytraj_1 = self.generate_line_trajectory(seg1start, seg1end,steps1)
+        xytraj_2 = self.generate_line_trajectory(seg2start, seg2end,steps2)
+        xytraj_3 = self.generate_line_trajectory(seg3start, seg3end,steps3)
         trajs = [xytraj_0, xytraj_1, xytraj_2, xytraj_3 ]
         fracs = [frac0, frac1, frac2, frac3]
+        stepseg=[steps0, steps1, steps2, steps3]
 
-        fraction = 1. / float(npasses ) * iter
+        fraction = 1. / float(npasses ) * 100
 
         for iter in range (npasses) :
             totaldone = fraction * iter
             for iseg in range (4) :
                 curtraj = trajs[iseg]
-                nsteps = len(curtraj[0])
-                for i in range (nsteps) :
+
+                for i in range (stepseg[iseg]) :
                     #move motor 2
                     self.move_one_motor(self.ser, 3, curtraj[i,0])
                     #move motor 3
                     self.move_one_motor(self.ser, 2, curtraj[i,1])
-                    #print "motor 2 : %5.3f   motor 3: %5.3f" % (zytraj [i,0], zytraj[i,1])
-                    progress = fracs[iseg] * fraction * float(i+1)/nsteps + totaldone
+                    print "motor 2 : %5.3f   motor 3: %5.3f" % (curtraj [i,0], curtraj[i,1])
+                    progress = fracs[iseg] * fraction * float(i+1)/stepseg[iseg] + totaldone
                     self.ui.progressBar_Circle.setValue(progress)
                     time.sleep(delay)
                 totaldone += fraction * fracs[iseg]
         infostring = "Rect tracing complete"
+        self.ui.progressBar_Circle.setValue(100)
         self.showMessage (infostring)
 
     def TraceLine (self) :
@@ -231,13 +237,17 @@ class ESP300(QtGui.QWidget):
         return traj
 
     def generate_line_trajectory (self, xy0, xy1,  steps) :
+
+        xytraj = np.zeros ((steps,2),dtype=np.float32)
+        if (steps < 1) :
+            return xytraj
         ydist = xy1[1] - xy0[1]
         xdist = xy1[0] - xy0[0]
         dist = math.sqrt(xdist * xdist + ydist * ydist)
-        dinc = dist / float(steps-1)
-        xinc = xdist / float(steps-1)
-        yinc = ydist / float(steps-1)
-        xytraj = np.zeros ((steps,2),dtype=np.float32)
+        dinc = dist / float(steps)
+        xinc = xdist / float(steps)
+        yinc = ydist / float(steps)
+
         for i in range (steps) :
             xytraj [i,0] = xy0[0] + xinc * i
             xytraj [i,1] = xy0[1] + yinc * i
