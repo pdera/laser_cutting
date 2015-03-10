@@ -74,15 +74,31 @@ class ESP300(QtGui.QWidget):
         nsteps = self.ui.lineEdit_LineSegments.text().toInt()[0]
         zytraj = self.generate_line_trajectory([startZ,startY],[endZ,endY],nsteps)
         delay = self.ui.lineEdit_LineDelay.text().toFloat()[0]
+        npasses = self.ui.comboBox_LinePasses.currentIndex() + 1
 
-        for i in range(nsteps):
-            #move motor 2
-            self.move_one_motor(self.ser, 3, zytraj[i,0])
-            #move motor 3
-            self.move_one_motor(self.ser, 2, zytraj[i,1])
-            print "motor 2 : %5.3f   motor 3: %5.3f" % (zytraj [i,0], zytraj[i,1])
-            self.ui.progressBar_Circle.setValue(100.*(i+1)/nsteps)
-            time.sleep(delay)
+        fraction = 1. / float(npasses) * 100
+        for iter in range (npasses) :
+            totaldone = fraction * iter
+            if iter % 2 == 0 :
+                for i in range(nsteps):
+                    #move motor 2
+                    self.move_one_motor(self.ser, 3, zytraj[i,0])
+                    #move motor 3
+                    self.move_one_motor(self.ser, 2, zytraj[i,1])
+                    print "motor 2 : %5.3f   motor 3: %5.3f" % (zytraj [i,0], zytraj[i,1])
+                    progress = fraction * float(i+1)/nsteps + totaldone
+                    self.ui.progressBar_Circle.setValue(progress)
+                    time.sleep(delay)
+            else :
+                for i in range(nsteps-1,-1,-1):
+                    #move motor 2
+                    self.move_one_motor(self.ser, 3, zytraj[i,0])
+                    #move motor 3
+                    self.move_one_motor(self.ser, 2, zytraj[i,1])
+                    print "motor 2 : %5.3f   motor 3: %5.3f" % (zytraj [i,0], zytraj[i,1])
+                    progress = fraction * float(nsteps-i-1)/nsteps + totaldone
+                    self.ui.progressBar_Circle.setValue(100.*(i+1)/nsteps)
+                    time.sleep(delay)
 
 
         infostring = "Line tracing complete"
