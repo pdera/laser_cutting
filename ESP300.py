@@ -35,10 +35,11 @@ class ESP300(QtGui.QWidget):
         self.pushButton_Connect.clicked.connect(self.connect)
         self.pushButton_TraceCircle.clicked.connect(self.TraceCircle)
         self.pushButton_TraceLine.clicked.connect(self.TraceLine)
-        self.pushButton_ReadCenter.clicked.connect(self.ReadCenter)
+        self.pushButton_TraceRect.clicked.connect(self.TraceRect)
         self.pushButton_DefineStartLine.clicked.connect(self.DefineStartLine)
         self.pushButton_DefineEndLine.clicked.connect(self.DefineEndLine)
-        self.pushButton_ReadCurrentRect.clicked.connect(self.ReadCurrentRect)
+        self.pushButton_DefineULRect.clicked.connect(self.DefineULRect)
+        self.pushButton_DefineLRRect.clicked.connect(self.DefineLRRect)
 
         self.pushButton_Joystick.clicked.connect(self.joystick_on)
         self.pushButton_X_move_n.clicked.connect(self.move_X_n)
@@ -73,6 +74,67 @@ class ESP300(QtGui.QWidget):
 
         self.ui.showMessage (self, 'Circle tracing complete')
 
+
+    def TraceRect (self) :
+        # get the vertices of the coordinates
+        Y_ul = self.ui.lineEdit_LineStartY.text().toFloat()[0]
+        Z_ul = self.ui.lineEdit_LineStartZ.text().toFloat()[0]
+        Y_lr = self.ui.lineEdit_LineEndY.text().toFloat()[0]
+        Z_lr = self.ui.lineEdit_LineEndZ.text().toFloat()[0]
+        Y_ur = Y_ul
+        Z_ur = Z_lr
+        Y_ll = Y_lr
+        Z_ll = Z_ul
+        # get the dist of each segment
+        seg0start = [Z_ul, Y_ul]
+        seg0end = [Z_ur, Y_ur]
+        seg0dist = math.sqrt (math.pow(Z_ur - Z_ul,2)+math.pow(Y_ur - Y_ul,2))
+        seg1start = [Z_ur, Y_ur]
+        seg1end = [Z_lr, Y_lr]
+        seg1dist = math.sqrt (math.pow(Z_lr - Z_ur,2)+math.pow(Y_lr - Y_ur,2))
+        seg2start = [Z_lr, Y_lr]
+        seg2end = [Z_ll, Y_ll]
+        seg2dist = math.sqrt (math.pow(Z_ll - Z_lr,2)+math.pow(Y_ll - Y_lr,2))
+        seg3start = seg2end
+        seg3end = seg0start
+        seg3dist = math.sqrt (math.pow(Z_ul - Z_ll,2)+math.pow(Y_ul - Y_ll,2))
+        totdist = seg0dist + seg1dist + seg2dist + seg3dist
+        if totdist <= 0 :
+            self.ui.showMessage ("0 distance defined")
+            return
+        frac0 = float(seg0dist) / totdist
+        frac1 = float(seg1dist) / totdist
+        frac2 = frac0
+        frac3 = frac1
+        nsteps = self.ui.lineEdit_RectSegments.text().toInt()[0]
+        delay = self.ui.lineEdit_RectDelay.text().toFloat()[0]
+        npasses = self.ui.comboBox_LinePasses.currentIndex() + 1
+        xytraj_0 = self.generate_line_trajectory(seg0start, seg0end,nsteps*frac0)
+        xytraj_1 = self.generate_line_trajectory(seg1start, seg1end,nsteps*frac1)
+        xytraj_2 = self.generate_line_trajectory(seg2start, seg2end,nsteps*frac2)
+        xytraj_3 = self.generate_line_trajectory(seg3start, seg3end,nsteps*frac3)
+        trajs = [xytraj_0, xytraj_1, xytraj_2, xytraj_3 ]
+        fracs = [frac0, frac1, frac2, frac3]
+
+        fraction = 1. / float(npasses ) * iter
+
+        for iter in range (npasses) :
+            totaldone = fraction * iter
+            for iseg in range (4) :
+                curtraj = trajs[iseg]
+                nsteps = len(curtraj[0])
+                for i in range (nsteps) :
+                    #move motor 2
+                    self.move_one_motor(self.ser, 3, curtraj[i,0])
+                    #move motor 3
+                    self.move_one_motor(self.ser, 2, curtraj[i,1])
+                    #print "motor 2 : %5.3f   motor 3: %5.3f" % (zytraj [i,0], zytraj[i,1])
+                    progress = fracs[iseg] * fraction * float(i+1)/nsteps + totaldone
+                    self.ui.progressBar_Circle.setValue(progress)
+                    time.sleep(delay)
+                totaldone += fraction * fracs[iseg]
+        infostring = "Rect tracing complete"
+        self.showMessage (infostring)
 
     def TraceLine (self) :
         startY = self.ui.lineEdit_LineStartY.text().toFloat()[0]
@@ -138,11 +200,19 @@ class ESP300(QtGui.QWidget):
         else:
             self.showMessage ('Establish connection with the controller first')
 
-    def ReadCurrentRect (self):
+    def DefineULRect (self):
         print "Read current loc and place at upper left YZ"
         if self.ser.isOpen():
             pos=self.read_position(self.ser)
             self.display_rect_upperLeft(pos)
+        else:
+            self.showMessage ('Establish connection with the controller first')
+
+    def DefineLRRect (self):
+        print "Read current loc and place at lower right YZ"
+        if self.ser.isOpen():
+            pos=self.read_position(self.ser)
+            self.display_rect_lowerRight(pos)
         else:
             self.showMessage ('Establish connection with the controller first')
 
@@ -283,6 +353,11 @@ class ESP300(QtGui.QWidget):
             self.lineEdit_BoxStartY.setText("{:10.4f}".format(positions[1]))
             self.lineEdit_BoxStartZ.setText("{:10.4f}".format(positions[2]))
 
+    def display_rect_lowerRight (self, positions):
+            #self.lineEdit_CircleX.setText("{:10.4f}".format(positions[0]))
+            self.lineEdit_BoxEndY.setText("{:10.4f}".format(positions[1]))
+            self.lineEdit_BoxEndZ.setText("{:10.4f}".format(positions[2]))
+
     def display_line_start (self, positions):
             #self.lineEdit_CircleX.setText("{:10.4f}".format(positions[0]))
             self.lineEdit_LineStartY.setText("{:10.4f}".format(positions[1]))
@@ -292,6 +367,8 @@ class ESP300(QtGui.QWidget):
             #self.lineEdit_CircleX.setText("{:10.4f}".format(positions[0]))
             self.lineEdit_LineEndY.setText("{:10.4f}".format(positions[1]))
             self.lineEdit_LineEndZ.setText("{:10.4f}".format(positions[2]))
+
+
             
     def connect(self, ser):
         if self.pushButton_Connect.text() == 'Connect':

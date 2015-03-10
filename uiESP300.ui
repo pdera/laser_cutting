@@ -274,25 +274,12 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>2</number>
    </property>
    <widget class="QWidget" name="tab">
     <attribute name="title">
      <string>Circle</string>
     </attribute>
-    <widget class="QPushButton" name="pushButton_ReadCenter">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>10</y>
-       <width>131</width>
-       <height>41</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Read center</string>
-     </property>
-    </widget>
     <widget class="QPushButton" name="pushButton_TraceCircle">
      <property name="geometry">
       <rect>
@@ -452,6 +439,56 @@
      <property name="text">
       <string>Radius [mm]</string>
      </property>
+    </widget>
+    <widget class="QWidget" name="">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>431</width>
+       <height>26</height>
+      </rect>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_5">
+      <item>
+       <widget class="QPushButton" name="pushButton_ReadCenter">
+        <property name="text">
+         <string>Read center</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_22">
+        <property name="text">
+         <string>Number of Passes :</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="comboBox_CirclePasses">
+        <item>
+         <property name="text">
+          <string>1</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>2</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>3</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>4</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </widget>
    <widget class="QWidget" name="tab_2">
@@ -621,8 +658,8 @@
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>90</y>
-       <width>331</width>
+       <y>60</y>
+       <width>261</width>
        <height>121</height>
       </rect>
      </property>
@@ -682,18 +719,94 @@
       <string>Trace Rectangle</string>
      </property>
     </widget>
-    <widget class="QPushButton" name="pushButton_ReadCurrentRect">
+    <widget class="QWidget" name="">
      <property name="geometry">
       <rect>
        <x>20</x>
        <y>10</y>
-       <width>131</width>
-       <height>41</height>
+       <width>471</width>
+       <height>31</height>
       </rect>
      </property>
-     <property name="text">
-      <string>Read Current </string>
+     <layout class="QHBoxLayout" name="horizontalLayout_6">
+      <item>
+       <widget class="QPushButton" name="pushButton_DefineULRect">
+        <property name="text">
+         <string>Define Upper Left</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton_DefineLRRect">
+        <property name="text">
+         <string>Define Lower Right</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_23">
+        <property name="text">
+         <string>Number of Passes :</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="comboBox_RectPasses">
+        <item>
+         <property name="text">
+          <string>1</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>2</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>3</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>4</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QWidget" name="">
+     <property name="geometry">
+      <rect>
+       <x>290</x>
+       <y>60</y>
+       <width>222</width>
+       <height>52</height>
+      </rect>
      </property>
+     <layout class="QGridLayout" name="gridLayout_4">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_25">
+        <property name="text">
+         <string>No. of Steps :</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="lineEdit_RectSegments"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_24">
+        <property name="text">
+         <string>Delay (s) :</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="lineEdit_LineDelay_2"/>
+      </item>
+     </layout>
     </widget>
    </widget>
   </widget>
