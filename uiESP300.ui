@@ -471,7 +471,7 @@
       <string>Trace Line</string>
      </property>
     </widget>
-    <widget class="QPushButton" name="pushButton_ReadCurrentLine">
+    <widget class="QPushButton" name="pushButton_DefineStartLine">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -481,10 +481,10 @@
       </rect>
      </property>
      <property name="text">
-      <string>Read Current </string>
+      <string>Define Start</string>
      </property>
     </widget>
-    <widget class="QWidget" name="">
+    <widget class="QWidget" name="layoutWidget">
      <property name="geometry">
       <rect>
        <x>11</x>
@@ -536,7 +536,7 @@
       </item>
      </layout>
     </widget>
-    <widget class="QWidget" name="">
+    <widget class="QWidget" name="layoutWidget">
      <property name="geometry">
       <rect>
        <x>230</x>
@@ -567,6 +567,19 @@
        <widget class="QLineEdit" name="lineEdit_LineDelay"/>
       </item>
      </layout>
+    </widget>
+    <widget class="QPushButton" name="pushButton_DefineEndLine">
+     <property name="geometry">
+      <rect>
+       <x>150</x>
+       <y>10</y>
+       <width>121</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Define End</string>
+     </property>
     </widget>
    </widget>
    <widget class="QWidget" name="tab_3">

@@ -36,7 +36,8 @@ class ESP300(QtGui.QWidget):
         self.pushButton_TraceCircle.clicked.connect(self.TraceCircle)
         self.pushButton_TraceLine.clicked.connect(self.TraceLine)
         self.pushButton_ReadCenter.clicked.connect(self.ReadCenter)
-        self.pushButton_ReadCurrentLine.clicked.connect(self.ReadCurrentLine)
+        self.pushButton_DefineStartLine.clicked.connect(self.DefineStartLine)
+        self.pushButton_DefineEndLine.clicked.connect(self.DefineEndLine)
         self.pushButton_ReadCurrentRect.clicked.connect(self.ReadCurrentRect)
 
         self.pushButton_Joystick.clicked.connect(self.joystick_on)
@@ -76,9 +77,10 @@ class ESP300(QtGui.QWidget):
 
         for i in range(nsteps):
             #move motor 2
-            self.move_one_motor(self.ser, 2, zytraj[i,0])
+            self.move_one_motor(self.ser, 3, zytraj[i,0])
             #move motor 3
-            self.move_one_motor(self.ser, 3, zytraj[i,1])
+            self.move_one_motor(self.ser, 2, zytraj[i,1])
+            print "motor 2 : %5.3f   motor 3: %5.3f" % (zytraj [i,0], zytraj[i,1])
             self.ui.progressBar_Circle.setValue(100.*(i+1)/nsteps)
             time.sleep(delay)
 
@@ -96,11 +98,19 @@ class ESP300(QtGui.QWidget):
         else:
             self.showMessage ('Establish connection with the controller first')
 
-    def ReadCurrentLine (self):
+    def DefineStartLine (self):
         print "Read current loc and place at start YZ"
         if self.ser.isOpen():
             pos=self.read_position(self.ser)
             self.display_line_start(pos)
+        else:
+            self.showMessage ('Establish connection with the controller first')
+
+    def DefineEndLine (self):
+        print "Read current loc and place at end YZ"
+        if self.ser.isOpen():
+            pos=self.read_position(self.ser)
+            self.display_line_end(pos)
         else:
             self.showMessage ('Establish connection with the controller first')
 
@@ -253,6 +263,11 @@ class ESP300(QtGui.QWidget):
             #self.lineEdit_CircleX.setText("{:10.4f}".format(positions[0]))
             self.lineEdit_LineStartY.setText("{:10.4f}".format(positions[1]))
             self.lineEdit_LineStartZ.setText("{:10.4f}".format(positions[2]))
+
+    def display_line_end (self, positions):
+            #self.lineEdit_CircleX.setText("{:10.4f}".format(positions[0]))
+            self.lineEdit_LineEndY.setText("{:10.4f}".format(positions[1]))
+            self.lineEdit_LineEndZ.setText("{:10.4f}".format(positions[2]))
             
     def connect(self, ser):
         if self.pushButton_Connect.text() == 'Connect':
