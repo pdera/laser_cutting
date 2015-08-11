@@ -61,7 +61,39 @@ class ESP300(QtGui.QWidget):
         npasses = self.ui.comboBox_CirclePasses.currentIndex() + 1
 
         fraction = 1. / float(npasses) * 100
-        for iter in range (npasses) :
+
+        #alternative is to use the HC and HL commands to create a group
+        # and generate the arc....
+        #move to a point out on the radius of the circle
+        y0 = Y - radius
+        z0 = Z
+
+        if self.ser.isOpen():
+            #establish group
+            string='1HN1,2\r'
+            self.ser.write(string.encode('ascii'))
+            #set vectorial velocity, acceleration and deceleration
+            string = '1HV10\r'
+            self.ser.write(string.encode('ascii'))
+            string = '1HA50\r'
+            self.ser.write(string.encode('ascii'))
+            string = '1HD50\r'
+            self.ser.write(string.encode('ascii'))
+            #enable group
+            string = '1HO\r'
+            self.ser.write(string.encode('ascii'))
+            #move to top of circle
+            string = '1HL%f,%f'%(y0, z0)
+            self.ser.write(string.encode('ascii'))
+            string = '1HC%f,%f,360'%(Y,Z)
+
+        else:
+            self.showMessage (self, 'Establish connection with the controller first')
+
+
+
+        """
+        #for iter in range (npasses) :
             totaldone = fraction * iter
 
             for i in range(0, int(nsteps)):
@@ -71,6 +103,7 @@ class ESP300(QtGui.QWidget):
                 time.sleep(delay)
                 progress = totaldone + fraction * float (i+1)/(nsteps)
                 self.ui.progressBar_Circle.setValue(progress)
+        """
 
         self.ui.showMessage (self, 'Circle tracing complete')
 
