@@ -89,7 +89,7 @@ class ESP300(QtGui.QWidget):
             string = '1HC%f,%f,360'%(Y,Z)
 
         else:
-            self.showMessage (self, 'Establish connection with the controller first')
+            self.showMessage ('Establish connection with the controller first')
 
 
 
