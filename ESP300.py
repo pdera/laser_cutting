@@ -16,13 +16,13 @@ class ESP300(QtGui.QWidget):
 
         self.ser = serial.Serial()
         
-        self.ui.lineEdit_position_X.setEnabled(False)
-        self.ui.lineEdit_position_Y.setEnabled(False)
-        self.ui.lineEdit_position_Z.setEnabled(False)
+        self.ui.lineEdit_position_X.setEnabled(True)
+        self.ui.lineEdit_position_Y.setEnabled(True)
+        self.ui.lineEdit_position_Z.setEnabled(True)
 
-        self.ui.lineEdit_CircleX.setEnabled(False)
-        self.ui.lineEdit_CircleY.setEnabled(False)
-        self.ui.lineEdit_CircleZ.setEnabled(False)
+        self.ui.lineEdit_CircleX.setEnabled(True)
+        self.ui.lineEdit_CircleY.setEnabled(True)
+        self.ui.lineEdit_CircleZ.setEnabled(True)
     
         self.ui.lineEdit_step_X.setText('0.01')
         self.ui.lineEdit_step_Y.setText('0.01')
@@ -40,6 +40,7 @@ class ESP300(QtGui.QWidget):
         self.pushButton_DefineEndLine.clicked.connect(self.DefineEndLine)
         self.pushButton_DefineULRect.clicked.connect(self.DefineULRect)
         self.pushButton_DefineLRRect.clicked.connect(self.DefineLRRect)
+        self.pushButton_ReadCenter.clicked.connect (self.DefineCenter)
 
         self.pushButton_Joystick.clicked.connect(self.joystick_on)
         self.pushButton_X_move_n.clicked.connect(self.move_X_n)
@@ -57,7 +58,7 @@ class ESP300(QtGui.QWidget):
         radius  = float(self.lineEdit_CircleRadius.text())
         delay   = float(self.lineEdit_CircleDelay.text())
         nsteps  = float(self.lineEdit_CircleSegments.text())
-        traj=self.generate_circle_trajectory ([Y,Z], radius, nsteps)
+        traj = self.generate_circle_trajectory ([Y,Z], radius, nsteps)
         npasses = self.ui.comboBox_CirclePasses.currentIndex() + 1
 
         fraction = 1. / float(npasses) * 100
@@ -170,7 +171,15 @@ class ESP300(QtGui.QWidget):
                     progress = fracs[iseg] * fraction * float(i+1)/stepseg[iseg] + totaldone
                     self.ui.progressBar_Circle.setValue(progress)
                     time.sleep(delay)
+
                 totaldone += fraction * fracs[iseg]
+            curtraj = trajs[0]
+            #move to origin
+            self.move_one_motor(self.ser, 3, curtraj[0,0])
+            self.move_one_motor(self.ser, 2, curtraj[0,1])
+
+            print "motor 2 : %5.3f   motor 3: %5.3f" % (curtraj [0,0], curtraj[0,1])
+
         infostring = "Rect tracing complete"
         self.ui.progressBar_Circle.setValue(100)
         self.showMessage (infostring)
@@ -244,6 +253,14 @@ class ESP300(QtGui.QWidget):
         if self.ser.isOpen():
             pos=self.read_position(self.ser)
             self.display_rect_upperLeft(pos)
+        else:
+            self.showMessage ('Establish connection with the controller first')
+
+    def DefineCenter (self):
+        print "Read current loc and place at center YZ"
+        if self.ser.isOpen():
+            pos=self.read_position(self.ser)
+            self.display_circle_center (pos)
         else:
             self.showMessage ('Establish connection with the controller first')
 
