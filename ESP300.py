@@ -71,7 +71,7 @@ class ESP300(QtGui.QWidget):
 
         if self.ser.isOpen():
             #establish group
-            string='1HN1,2\r'
+            string='1HN2,3\r'
             self.ser.write(string.encode('ascii'))
             #set vectorial velocity, acceleration and deceleration
             string = '1HV10\r'
@@ -84,9 +84,9 @@ class ESP300(QtGui.QWidget):
             string = '1HO\r'
             self.ser.write(string.encode('ascii'))
             #move to top of circle
-            string = '1HL%f,%f'%(y0, z0)
+            string = '1HL%f,%f\r'%(y0, z0)
             self.ser.write(string.encode('ascii'))
-            string = '1HC%f,%f,360'%(Y,Z)
+            string = '1HC%f,%f,360\r'%(Y,Z)
 
         else:
             self.showMessage ('Establish connection with the controller first')
