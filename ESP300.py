@@ -87,6 +87,16 @@ class ESP300(QtGui.QWidget):
             string = '1HL%f,%f\r'%(y0, z0)
             self.ser.write(string.encode('ascii'))
             string = '1HC%f,%f,360\r'%(Y,Z)
+            ln=0
+            count=0
+            while (ln != 1) and (count < 200):
+                string='1HS?\r'
+                self.ser.write(string.encode('ascii'))
+                ln=int(self.ser.readline())
+                count=count+1
+                time.sleep(0.1)
+            string = '1HF\r'
+            self.ser.write(string.encode('ascii'))
 
         else:
             self.showMessage ('Establish connection with the controller first')
@@ -106,7 +116,7 @@ class ESP300(QtGui.QWidget):
                 self.ui.progressBar_Circle.setValue(progress)
         """
 
-        self.ui.showMessage (self, 'Circle tracing complete')
+        self.ui.showMessage ('Circle tracing complete')
 
 
     def TraceRect (self) :
