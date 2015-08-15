@@ -97,6 +97,7 @@ class ESP300(QtGui.QWidget):
                 time.sleep(0.1)
             string = '1HF\r'
             self.ser.write(string.encode('ascii'))
+            self.read_and_update_position(self.ser)
 
         else:
             self.showMessage ('Establish connection with the controller first')
