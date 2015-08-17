@@ -71,31 +71,33 @@ class ESP300(QtGui.QWidget):
 
         if self.ser.isOpen():
             #establish group
-            string='1HN2,3\r'
+            string='2HN2,3\r'
             self.ser.write(string.encode('ascii'))
             #set vectorial velocity, acceleration and deceleration
-            string = '1HV10\r'
+            string = '2HV10\r'
             self.ser.write(string.encode('ascii'))
-            string = '1HA50\r'
+            string = '2HA50\r'
             self.ser.write(string.encode('ascii'))
-            string = '1HD50\r'
+            string = '2HD50\r'
             self.ser.write(string.encode('ascii'))
             #enable group
-            string = '1HO\r'
+            string = '2HO\r'
             self.ser.write(string.encode('ascii'))
             #move to top of circle
-            string = '1HL%f,%f\r'%(y0, z0)
+            string = '2HL%f,%f\r'%(y0, z0)
             self.ser.write(string.encode('ascii'))
-            string = '1HC%f,%f,360\r'%(Y,Z)
+            string = '2HC%f,%f,360\r'%(Y,Z)
             ln=0
             count=0
             while (ln != 1) and (count < 200):
-                string='1HS?\r'
+                string='2HS?\r'
                 self.ser.write(string.encode('ascii'))
                 ln=int(self.ser.readline())
                 count=count+1
                 time.sleep(0.1)
-            string = '1HF\r'
+            string = '2HF\r'
+            self.ser.write(string.encode('ascii'))
+            string = '2HX\r'
             self.ser.write(string.encode('ascii'))
             self.read_and_update_position(self.ser)
 
