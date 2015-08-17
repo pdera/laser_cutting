@@ -89,10 +89,13 @@ class ESP300(QtGui.QWidget):
             string = '2HC%f,%f,360\r'%(Y,Z)
             ln=0
             count=0
-            while (ln != 1) and (count < 200):
+            #while (ln != 1) and (count < 20):
+            while (count < 20) :
                 string='2HS?\r'
                 self.ser.write(string.encode('ascii'))
-                ln=int(self.ser.readline())
+                ln=(self.ser.readline())
+                print 'circle mode'
+                print ln
                 count=count+1
                 time.sleep(0.1)
             string = '2HF\r'
