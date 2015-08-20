@@ -90,7 +90,7 @@ class ESP300(QtGui.QWidget):
             string = '1HL%f,%f\r'%(y0, z0)
             self.ser.write(string.encode('ascii'))
             arcstring = '1HC%f,%f,18\r'%(Y,Z)
-            for i range(20) :
+            for i in range(20) :
 
                 self.ser.write(string.encode('ascii'))
                 time.sleep(0.1)
