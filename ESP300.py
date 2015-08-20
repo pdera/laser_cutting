@@ -89,7 +89,7 @@ class ESP300(QtGui.QWidget):
             #move to top of circle
             string = '1HL%f,%f\r'%(y0, z0)
             self.ser.write(string.encode('ascii'))
-            arcstring = '1HC%f,%f,360\r'%(Y,Z)
+            arcstring = '1HC%f,%f,18\r'%(Y,Z)
             for i range(20) :
 
                 self.ser.write(string.encode('ascii'))
