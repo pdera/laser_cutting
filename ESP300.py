@@ -69,39 +69,50 @@ class ESP300(QtGui.QWidget):
         y0 = Y - radius
         z0 = Z
 
+        print Y,Z
+        print y0,z0
         if self.ser.isOpen():
+
             #establish group
-            string='2HN2,3\r'
+            string='1HN2,3\r'
             self.ser.write(string.encode('ascii'))
             #set vectorial velocity, acceleration and deceleration
-            string = '2HV10\r'
+            string = '1HV1\r'
             self.ser.write(string.encode('ascii'))
-            string = '2HA50\r'
+            string = '1HA5\r'
             self.ser.write(string.encode('ascii'))
-            string = '2HD50\r'
+            string = '1HD2\r'
             self.ser.write(string.encode('ascii'))
             #enable group
-            string = '2HO\r'
+            string = '1HO\r'
             self.ser.write(string.encode('ascii'))
             #move to top of circle
-            string = '2HL%f,%f\r'%(y0, z0)
+            string = '1HL%f,%f\r'%(y0, z0)
             self.ser.write(string.encode('ascii'))
-            string = '2HC%f,%f,360\r'%(Y,Z)
-            ln=0
-            count=0
-            #while (ln != 1) and (count < 20):
-            while (count < 20) :
-                string='2HS?\r'
+            arcstring = '1HC%f,%f,360\r'%(Y,Z)
+            for i range(20) :
+
                 self.ser.write(string.encode('ascii'))
-                ln=(self.ser.readline())
-                print 'circle mode'
-                print ln
-                count=count+1
                 time.sleep(0.1)
-            string = '2HF\r'
+                self.ser.write("1HP\r".encode('ascii'))
+                ln=self.ser.readline()
+                positions = self.get_positions (self, ln)
+                self.display_positions (positions)
+                # make sure movement has stopped
+                count = 0
+                while (ln != 1) and (count < 5):
+                #while (count < 20) :
+                    string='1HS?\r'
+                    self.ser.write(string.encode('ascii'))
+                    ln=int(self.ser.readline())
+                    print ln
+                    count=count+1
+                    time.sleep(0.1)
+            # turn off group
+            string = '1HF\r'
             self.ser.write(string.encode('ascii'))
-            string = '2HX\r'
-            self.ser.write(string.encode('ascii'))
+            string = '1HX\r'
+            #self.ser.write(string.encode('ascii'))
             self.read_and_update_position(self.ser)
 
         else:
@@ -389,7 +400,7 @@ class ESP300(QtGui.QWidget):
                         self.ser.write(st[i].encode('ascii'))
                         time.sleep(delay)
                     self.read_and_update_position(self.ser)
-            else : self.showMessage (self, 'Establish connection with the controller first')
+            else : self.showMessage ('Establish connection with the controller first')
 
 
     def move_one_motor(self, ser, motor, target):
@@ -399,7 +410,7 @@ class ESP300(QtGui.QWidget):
                 self.wait_for_end_of_motion(ser, motor)
                 self.read_and_update_position(ser)
             else:
-                self.showMessage (self, 'Establish connection with the controller first')
+                self.showMessage ('Establish connection with the controller first')
     
     def get_positions(self, ln):
             positions=[0.00,0.00,0.00]
