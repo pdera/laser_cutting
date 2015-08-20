@@ -94,10 +94,7 @@ class ESP300(QtGui.QWidget):
 
                 self.ser.write(string.encode('ascii'))
                 time.sleep(0.1)
-                self.ser.write("1HP\r".encode('ascii'))
-                ln=self.ser.readline()
-                positions = self.get_positions (self, ln)
-                self.display_positions (positions)
+
                 # make sure movement has stopped
                 count = 0
                 while (ln != 1) and (count < 5):
@@ -108,6 +105,11 @@ class ESP300(QtGui.QWidget):
                     print ln
                     count=count+1
                     time.sleep(0.1)
+                self.ser.write("1HP\r".encode('ascii'))
+                time.sleep(0.1)
+                ln=self.ser.readline()
+                positions = self.get_positions (self, ln)
+                self.display_positions (positions)
             # turn off group
             string = '1HF\r'
             self.ser.write(string.encode('ascii'))
