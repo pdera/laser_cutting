@@ -49,6 +49,21 @@ class ESP300(QtGui.QWidget):
         self.pushButton_Y_move_p.clicked.connect(self.move_Y_p)
         self.pushButton_Z_move_n.clicked.connect(self.move_Z_n)
         self.pushButton_Z_move_p.clicked.connect(self.move_Z_p)
+        self.circleSpeedSlider.valueChanged.connect(self.csSliderVal)
+        self.abortCircleButton.clicked.connect (self.abortCuttingCircle)
+        self.cutCircle = True
+        self.circleSpeed = .1
+        self.circleSpeedSlider.setValue (int(self.circleSpeed * 100.))
+
+    def abortCuttingCircle (self) :
+        self.cutCircle = False
+
+    def csSliderVal (self, value):
+        val = float(value) / 100.
+        str = QtCore.QString ("%1").arg(val)
+        self.circleSpeedLabel.setText (str)
+        self.circleSpeed = val
+
 
     def TraceCircle (self):
         print "Trace circle"
@@ -56,16 +71,16 @@ class ESP300(QtGui.QWidget):
         Y       = float(self.lineEdit_CircleY.text())
         Z       = float(self.lineEdit_CircleZ.text())
         radius  = float(self.lineEdit_CircleRadius.text())
-        delay   = float(self.lineEdit_CircleDelay.text())
-        nsteps  = float(self.lineEdit_CircleSegments.text())
-        traj = self.generate_circle_trajectory ([Y,Z], radius, nsteps)
+        #nsteps  = float(self.lineEdit_CircleSegments.text())
+        #traj = self.generate_circle_trajectory ([Y,Z], radius, nsteps)
         npasses = self.ui.comboBox_CirclePasses.currentIndex() + 1
-
+        self.cutCircle = True ;
         fraction = 1. / float(npasses) * 100
 
         #alternative is to use the HC and HL commands to create a group
         # and generate the arc....
         #move to a point out on the radius of the circle
+        print 'radius is : %f'%( radius)
         y0 = Y - radius
         z0 = Z
 
@@ -77,11 +92,12 @@ class ESP300(QtGui.QWidget):
             string='1HN2,3\r'
             self.ser.write(string.encode('ascii'))
             #set vectorial velocity, acceleration and deceleration
-            string = '1HV1\r'
+            string = '1HV%f\r'%(self.circleSpeed)
+            print string
             self.ser.write(string.encode('ascii'))
-            string = '1HA5\r'
+            string = '1HA1\r'
             self.ser.write(string.encode('ascii'))
-            string = '1HD2\r'
+            string = '1HD1\r'
             self.ser.write(string.encode('ascii'))
             #enable group
             string = '1HO\r'
@@ -89,32 +105,70 @@ class ESP300(QtGui.QWidget):
             #move to top of circle
             string = '1HL%f,%f\r'%(y0, z0)
             self.ser.write(string.encode('ascii'))
-            arcstring = '1HC%f,%f,18\r'%(Y,Z)
-            for i in range(20) :
+            time.sleep (1.)
+            arcstring = '1HC%f,%f,360\r'%(Y,Z)
+            totalSteps = 1*npasses
+            for ipass in range (totalSteps) :
+                
+                self.ser.write(arcstring.encode('ascii'))
+                #time.sleep (2.)
+                string = '1HS?\r'
+                movingFlag = 0
+                count = 0
+                frac = float(ipass+1.)/totalSteps * 100.
+                while (movingFlag !=1) and (count < 10000)  :
+                    self.ser.write(string.encode('ascii'))
+                    movingFlag=int(self.ser.readline())
+                    QtCore.QCoreApplication.processEvents()
+                    print count, movingFlag
+                    time.sleep (.05)
+                    count = count
+                    if (self.cutCircle == False) :
+                        string = '1HS\r'
+                        self.ser.write(string.encode('ascii'))
+                        string = '1HW\r'
+                        self.ser.write(string.encode('ascii'))
+                        print 'trying to abort'
+                        frac = 0
+                        break
+                self.ui.progressBar_Circle.setValue(frac)
+                time.sleep(.1)
+                
+                
+            """
+            for i in range(0) :
 
-                self.ser.write(string.encode('ascii'))
-                time.sleep(0.1)
+                self.ser.write(arcstring.encode('ascii'))
+                time.sleep(0.3)
 
                 # make sure movement has stopped
                 count = 0
-                while (ln != 1) and (count < 5):
+                ln = 0
+                #while (ln != 1) and (count < 5):
                 #while (count < 20) :
-                    string='1HS?\r'
-                    self.ser.write(string.encode('ascii'))
-                    ln=int(self.ser.readline())
-                    print ln
-                    count=count+1
-                    time.sleep(0.1)
+                #   string='1HS?\r'
+                #   self.ser.write(string.encode('ascii'))
+                #   ln=int(self.ser.readline())
+                #   print ln
+                #   count=count+1
+                #   time.sleep(0.1)
                 self.ser.write("1HP\r".encode('ascii'))
-                time.sleep(0.1)
+                time.sleep(0.2)
                 ln=self.ser.readline()
-                positions = self.get_positions (self, ln)
-                self.display_positions (positions)
+                if "," in ln :
+                    positionsYZ = self.get_positionsYZ (ln)
+                    print 'POS', positionsYZ[0], positionsYZ[1]
+                    self.display_positionsYZ (positionsYZ)
+                else :
+                    print 'HP Failed : no comma in return string'
+                #self.read_and_update_position(self.ser)
+            """
+            
             # turn off group
             string = '1HF\r'
-            self.ser.write(string.encode('ascii'))
-            string = '1HX\r'
             #self.ser.write(string.encode('ascii'))
+            string = '1HX\r'
+            self.ser.write(string.encode('ascii'))
             self.read_and_update_position(self.ser)
 
         else:
@@ -134,9 +188,10 @@ class ESP300(QtGui.QWidget):
                 progress = totaldone + fraction * float (i+1)/(nsteps)
                 self.ui.progressBar_Circle.setValue(progress)
         """
-
-        self.ui.showMessage ('Circle tracing complete')
-
+        if self.cutCircle :
+            self.ui.showMessage ('Circle tracing complete')
+        else :
+            self.ui.showMessage ('Circle tracing aborted!')
 
     def TraceRect (self) :
         # get the vertices of the coordinates
@@ -426,11 +481,28 @@ class ESP300(QtGui.QWidget):
                 positions[i]=float(ln1[s:e])
                 ln1=ln1[p.start()+1:]
             return positions
+
+    def get_positionsYZ(self, ln):
+            positions=[0.00,0.00]
+            li=[0,1]
+            ln1=ln
+            s=0
+            e=0
+            p = re.search (",", ln1)
+            e = p.start() -1
+            positions[0]=float(ln1[0:e])
+            positions[1]=float(ln1[p.start()+1:])
+            return positions
         
     def display_positions(self, positions):
             self.lineEdit_position_X.setText("{:10.4f}".format(positions[0]))
             self.lineEdit_position_Y.setText("{:10.4f}".format(positions[1]))
             self.lineEdit_position_Z.setText("{:10.4f}".format(positions[2]))
+
+    def display_positionsYZ(self, positions):
+            print 'update positions ', positions[0], positions[1]
+            self.lineEdit_position_Y.setText("{:10.4f}".format(positions[0]))
+            self.lineEdit_position_Z.setText("{:10.4f}".format(positions[1]))
 
     def display_circle_center(self, positions):
             self.lineEdit_CircleX.setText("{:10.4f}".format(positions[0]))
