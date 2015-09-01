@@ -49,20 +49,21 @@ class ESP300(QtGui.QWidget):
         self.pushButton_Y_move_p.clicked.connect(self.move_Y_p)
         self.pushButton_Z_move_n.clicked.connect(self.move_Z_n)
         self.pushButton_Z_move_p.clicked.connect(self.move_Z_p)
-        self.circleSpeedSlider.valueChanged.connect(self.csSliderVal)
+        #self.circleSpeedSlider.valueChanged.connect(self.csSliderVal)
         self.abortCircleButton.clicked.connect (self.abortCuttingCircle)
         self.cutCircle = True
         self.circleSpeed = .1
-        self.circleSpeedSlider.setValue (int(self.circleSpeed * 100.))
+        self.lineEdit_CircleSpeed.setText ('0.1')
+        self.MoveToTargetButton.clicked.connect (self.move_to_target)
 
     def abortCuttingCircle (self) :
         self.cutCircle = False
 
     def csSliderVal (self, value):
-        val = float(value) / 100.
-        str = QtCore.QString ("%1").arg(val)
-        self.circleSpeedLabel.setText (str)
-        self.circleSpeed = val
+
+        str = QtCore.QString ("%1").arg(value)
+        self.lineEdit_CircleSpeed.setText (str)
+        self.circleSpeed = value
 
 
     def TraceCircle (self):
@@ -71,18 +72,21 @@ class ESP300(QtGui.QWidget):
         Y       = float(self.lineEdit_CircleY.text())
         Z       = float(self.lineEdit_CircleZ.text())
         radius  = float(self.lineEdit_CircleRadius.text())
+        npasses = int(self.lineEdit_CirclePasses.text())
+        self.circleSpeed = float(self.lineEdit_CircleSpeed.text())
         #nsteps  = float(self.lineEdit_CircleSegments.text())
         #traj = self.generate_circle_trajectory ([Y,Z], radius, nsteps)
-        npasses = self.ui.comboBox_CirclePasses.currentIndex() + 1
         self.cutCircle = True ;
-        fraction = 1. / float(npasses) * 100
+
 
         #alternative is to use the HC and HL commands to create a group
         # and generate the arc....
         #move to a point out on the radius of the circle
-        print 'radius is : %f'%( radius)
+
         y0 = Y - radius
         z0 = Z
+
+
 
         print Y,Z
         print y0,z0
@@ -105,24 +109,48 @@ class ESP300(QtGui.QWidget):
             #move to top of circle
             string = '1HL%f,%f\r'%(y0, z0)
             self.ser.write(string.encode('ascii'))
-            time.sleep (1.)
+            time.sleep (.1)
+            string = '1HW\r'
+            self.ser.write(string.encode('ascii'))
+
             arcstring = '1HC%f,%f,360\r'%(Y,Z)
-            totalSteps = 1*npasses
-            for ipass in range (totalSteps) :
+            totalDegrees = 360.*npasses
+            for ipass in range (npasses) :
                 
                 self.ser.write(arcstring.encode('ascii'))
                 #time.sleep (2.)
+
                 string = '1HS?\r'
                 movingFlag = 0
                 count = 0
-                frac = float(ipass+1.)/totalSteps * 100.
+
                 while (movingFlag !=1) and (count < 10000)  :
+                    self.ser.flush()
                     self.ser.write(string.encode('ascii'))
-                    movingFlag=int(self.ser.readline())
+                    time.sleep (.2)
+                    ln = self.ser.readline()
+                    if (len (ln)) >0 :
+                        print ln
+                        movingFlag=int(ln)
                     QtCore.QCoreApplication.processEvents()
-                    print count, movingFlag
                     time.sleep (.05)
-                    count = count
+                    count = count +1
+                    self.ser.flush()
+                    string = '1HP?\r'
+                    self.ser.write(string.encode('ascii'))
+                    #time.sleep (.2)
+                    ln = self.ser.readline()
+                    print 'curpos is : ', ln
+                    curpos = self.get_positionsYZ (ln)
+                    ydiff = curpos[0]- Y
+                    zdiff = curpos[1]- Z
+                    angle = math.degrees(math.atan2 (zdiff,ydiff))
+                    if (angle < 0) :
+                        angle += 360.
+                    cumangle = ipass * 360 + angle
+                    frac = cumangle / totalDegrees
+                    self.ui.progressBar_Circle.setValue(frac)
+
                     if (self.cutCircle == False) :
                         string = '1HS\r'
                         self.ser.write(string.encode('ascii'))
@@ -131,44 +159,19 @@ class ESP300(QtGui.QWidget):
                         print 'trying to abort'
                         frac = 0
                         break
-                self.ui.progressBar_Circle.setValue(frac)
+
                 time.sleep(.1)
-                
-                
-            """
-            for i in range(0) :
 
-                self.ser.write(arcstring.encode('ascii'))
-                time.sleep(0.3)
-
-                # make sure movement has stopped
-                count = 0
-                ln = 0
-                #while (ln != 1) and (count < 5):
-                #while (count < 20) :
-                #   string='1HS?\r'
-                #   self.ser.write(string.encode('ascii'))
-                #   ln=int(self.ser.readline())
-                #   print ln
-                #   count=count+1
-                #   time.sleep(0.1)
-                self.ser.write("1HP\r".encode('ascii'))
-                time.sleep(0.2)
-                ln=self.ser.readline()
-                if "," in ln :
-                    positionsYZ = self.get_positionsYZ (ln)
-                    print 'POS', positionsYZ[0], positionsYZ[1]
-                    self.display_positionsYZ (positionsYZ)
-                else :
-                    print 'HP Failed : no comma in return string'
-                #self.read_and_update_position(self.ser)
-            """
-            
-            # turn off group
-            string = '1HF\r'
-            #self.ser.write(string.encode('ascii'))
+            #delete group
             string = '1HX\r'
             self.ser.write(string.encode('ascii'))
+            self.ser.flush ()
+
+            #string = 'TP?\r'
+            #self.ser.write (string.encode('ascii'))
+            #ln = self.ser.readline()
+            #print 'Error : ',ln
+            #time.sleep (2)
             self.read_and_update_position(self.ser)
 
         else:
@@ -393,15 +396,25 @@ class ESP300(QtGui.QWidget):
         if self.ser.isOpen():
             self.ser.write("TP?\r".encode('ascii'))
             ln=self.ser.readline()
+            print 'read_position is : ', ln
             positions=self.get_positions(ln)
+            
         else:
             positions=[0.0,0.0,0.0]
         return positions
+
+
     
     def read_and_update_position(self, ser):
             if self.ser.isOpen():
                 positions=self.read_position(self.ser)
                 self.display_positions(positions)
+            else:
+                self.showMessage (self, 'Establish connection with the controller first')
+    def read_and_update_targetposition(self, ser):
+            if self.ser.isOpen():
+                positions=self.read_position(self.ser)
+                self.display_targetpositions(positions)
             else:
                 self.showMessage (self, 'Establish connection with the controller first')
 
@@ -499,6 +512,11 @@ class ESP300(QtGui.QWidget):
             self.lineEdit_position_Y.setText("{:10.4f}".format(positions[1]))
             self.lineEdit_position_Z.setText("{:10.4f}".format(positions[2]))
 
+    def display_targetpositions(self, positions):
+            self.lineEdit_target_X.setText("{:10.4f}".format(positions[0]))
+            self.lineEdit_target_Y.setText("{:10.4f}".format(positions[1]))
+            self.lineEdit_target_Z.setText("{:10.4f}".format(positions[2]))
+
     def display_positionsYZ(self, positions):
             print 'update positions ', positions[0], positions[1]
             self.lineEdit_position_Y.setText("{:10.4f}".format(positions[0]))
@@ -541,10 +559,23 @@ class ESP300(QtGui.QWidget):
             self.ser.timeout=0.5
             self.ser.open()
             self.read_and_update_position(self.ser)
+            self.read_and_update_targetposition (self.ser)
             self.pushButton_Connect.setText('Disconnect')
         else:
             self.pushButton_Connect.setText('Connect')
             self.ser.close()
+
+    def move_to_target (self) :
+        pos = self.read_position (self.ser)
+        xtarget = self.lineEdit_target_X.text().toFloat()[0]
+        #magmove = xtarget - pos[0]
+        self.move_one_motor (self.ser, 1, xtarget)
+        ytarget = self.lineEdit_target_Y.text().toFloat()[0]
+        #magmove = ytarget - pos[1]
+        self.move_one_motor (self.ser, 2, ytarget)
+        ztarget = self.lineEdit_target_Z.text().toFloat()[0]
+        magmove = ztarget - pos[2]
+        self.move_one_motor (self.ser, 3, ztarget)
     #--------------------------------------
     def move_X_n(self):
         Pos  = self.lineEdit_position_X.text()
