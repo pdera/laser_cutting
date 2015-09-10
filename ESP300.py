@@ -72,7 +72,7 @@ class ESP300(QtGui.QWidget):
         Y       = float(self.lineEdit_CircleY.text())
         Z       = float(self.lineEdit_CircleZ.text())
         radius  = float(self.lineEdit_CircleRadius.text())
-        npasses = int(self.lineEdit_CirclePasses.text())
+        npasses = int(self.lineEdit_numCirclePasses.text())
         self.circleSpeed = float(self.lineEdit_CircleSpeed.text())
         #nsteps  = float(self.lineEdit_CircleSegments.text())
         #traj = self.generate_circle_trajectory ([Y,Z], radius, nsteps)
@@ -120,12 +120,13 @@ class ESP300(QtGui.QWidget):
                 self.ser.write(arcstring.encode('ascii'))
                 #time.sleep (2.)
 
-                string = '1HS?\r'
+                
                 movingFlag = 0
                 count = 0
 
                 while (movingFlag !=1) and (count < 10000)  :
                     self.ser.flush()
+                    string = '1HS?\r'
                     self.ser.write(string.encode('ascii'))
                     time.sleep (.2)
                     ln = self.ser.readline()
@@ -144,12 +145,14 @@ class ESP300(QtGui.QWidget):
                     curpos = self.get_positionsYZ (ln)
                     ydiff = curpos[0]- Y
                     zdiff = curpos[1]- Z
-                    angle = math.degrees(math.atan2 (zdiff,ydiff))
+                    angle = math.degrees(math.atan2 (zdiff,ydiff)) + 180.
+                    #print 'angle : ',angle
                     if (angle < 0) :
                         angle += 360.
                     cumangle = ipass * 360 + angle
                     frac = cumangle / totalDegrees
-                    self.ui.progressBar_Circle.setValue(frac)
+                    #print 'angle is : ', cumangle, '  frac is : ', frac
+                    self.ui.progressBar_Circle.setValue(frac * 100)
 
                     if (self.cutCircle == False) :
                         string = '1HS\r'
@@ -167,11 +170,7 @@ class ESP300(QtGui.QWidget):
             self.ser.write(string.encode('ascii'))
             self.ser.flush ()
 
-            #string = 'TP?\r'
-            #self.ser.write (string.encode('ascii'))
-            #ln = self.ser.readline()
-            #print 'Error : ',ln
-            #time.sleep (2)
+            
             self.read_and_update_position(self.ser)
 
         else:
@@ -179,18 +178,7 @@ class ESP300(QtGui.QWidget):
 
 
 
-        """
-        #for iter in range (npasses) :
-            totaldone = fraction * iter
-
-            for i in range(0, int(nsteps)):
-                #print 'progress', float(i)/int(nsteps)*100.0,'%'
-                self.move_one_motor(self.ser, 2, traj[i,0])
-                self.move_one_motor(self.ser, 3, traj[i,1])
-                time.sleep(delay)
-                progress = totaldone + fraction * float (i+1)/(nsteps)
-                self.ui.progressBar_Circle.setValue(progress)
-        """
+       
         if self.cutCircle :
             self.ui.showMessage ('Circle tracing complete')
         else :
