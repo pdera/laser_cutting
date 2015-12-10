@@ -42,6 +42,22 @@ class ESP300(QtGui.QWidget):
         self.pushButton_DefineLRRect.clicked.connect(self.DefineLRRect)
         self.pushButton_ReadCenter.clicked.connect (self.DefineCenter)
 
+        ### Saved position functions
+        self.ui.ps_1_setcur.clicked.connect(self.setCur_1)
+        self.ui.ps_2_setcur.clicked.connect(self.setCur_2)
+        self.ui.ps_3_setcur.clicked.connect(self.setCur_3)
+        self.ui.ps_4_setcur.clicked.connect(self.setCur_4)
+        self.ui.ps_5_setcur.clicked.connect(self.setCur_5)
+        self.ui.ps_6_setcur.clicked.connect(self.setCur_6)
+        self.ui.ps_1_move.clicked.connect (self.move_1)
+        self.ui.ps_2_move.clicked.connect (self.move_2)
+        self.ui.ps_3_move.clicked.connect (self.move_3)
+        self.ui.ps_4_move.clicked.connect (self.move_4)
+        self.ui.ps_5_move.clicked.connect (self.move_5)
+        self.ui.ps_6_move.clicked.connect (self.move_6)
+
+
+
         self.pushButton_Joystick.clicked.connect(self.joystick_on)
         self.pushButton_X_move_n.clicked.connect(self.move_X_n)
         self.pushButton_X_move_p.clicked.connect(self.move_X_p)
@@ -76,7 +92,7 @@ class ESP300(QtGui.QWidget):
         self.circleSpeed = float(self.lineEdit_CircleSpeed.text())
         #nsteps  = float(self.lineEdit_CircleSegments.text())
         #traj = self.generate_circle_trajectory ([Y,Z], radius, nsteps)
-        self.cutCircle = True ;
+        self.cutCircle = True
 
 
         #alternative is to use the HC and HL commands to create a group
@@ -562,8 +578,22 @@ class ESP300(QtGui.QWidget):
         #magmove = ytarget - pos[1]
         self.move_one_motor (self.ser, 2, ytarget)
         ztarget = self.lineEdit_target_Z.text().toFloat()[0]
-        magmove = ztarget - pos[2]
+        #magmove = ztarget - pos[2]
         self.move_one_motor (self.ser, 3, ztarget)
+
+    def move_to_location (self, pos) :
+        pos_cur = self.read_position (self.ser)
+        xtarget = pos[0]
+        #magmove = xtarget - pos[0]
+        self.move_one_motor (self.ser, 1, xtarget)
+        ytarget = pos[1]
+        #magmove = ytarget - pos[1]
+        self.move_one_motor (self.ser, 2, ytarget)
+        ztarget = pos[2]
+        #magmove = ztarget - pos[2]
+        self.move_one_motor (self.ser, 3, ztarget)
+
+
     #--------------------------------------
     def move_X_n(self):
         Pos  = self.lineEdit_position_X.text()
@@ -601,6 +631,93 @@ class ESP300(QtGui.QWidget):
         target=float(Pos)+float(Step)
         self.move_one_motor(self.ser, 3, target)
     #------------------------------------
+
+    def setCur_1(self):
+        positions = self.get_positions()
+        self.ui.ps_1_x_le.setText("{:10.4f}".format(positions[0]))
+        self.ui.ps_1_y_le.setText("{:10.4f}".format(positions[1]))
+        self.ui.ps_1_z_le.setText("{:10.4f}".format(positions[2]))
+
+    def setCur_2(self):
+        positions = self.get_positions()
+        self.ui.ps_2_x_le.setText("{:10.4f}".format(positions[0]))
+        self.ui.ps_2_y_le.setText("{:10.4f}".format(positions[1]))
+        self.ui.ps_2_z_le.setText("{:10.4f}".format(positions[2]))
+
+    def setCur_5(self):
+        positions = self.get_positions()
+        self.ui.ps_3_x_le.setText("{:10.4f}".format(positions[0]))
+        self.ui.ps_3_y_le.setText("{:10.4f}".format(positions[1]))
+        self.ui.ps_3_z_le.setText("{:10.4f}".format(positions[2]))
+
+    def setCur_5(self):
+        positions = self.get_positions()
+        self.ui.ps_4_x_le.setText("{:10.4f}".format(positions[0]))
+        self.ui.ps_4_y_le.setText("{:10.4f}".format(positions[1]))
+        self.ui.ps_4_z_le.setText("{:10.4f}".format(positions[2]))
+
+    def setCur_5(self):
+        positions = self.get_positions()
+        self.ui.ps_5_x_le.setText("{:10.4f}".format(positions[0]))
+        self.ui.ps_5_y_le.setText("{:10.4f}".format(positions[1]))
+        self.ui.ps_5_z_le.setText("{:10.4f}".format(positions[2]))
+
+    def setCur_6(self):
+        positions = self.get_positions()
+        self.ui.ps_6_x_le.setText("{:10.4f}".format(positions[0]))
+        self.ui.ps_6_y_le.setText("{:10.4f}".format(positions[1]))
+        self.ui.ps_6_z_le.setText("{:10.4f}".format(positions[2]))
+
+    def move_1(self):
+        x = self.ui.ps_1_x_le.text().toFloat()[0]
+        y = self.ui.ps_1_y_le.text().toFloat()[0]
+        z = self.ui.ps_1_z_le.text().toFloat()[0]
+        pos=[x,y,z]
+        self.move_to_location (pos)
+
+    def move_1(self):
+        x = self.ui.ps_1_x_le.text().toFloat()[0]
+        y = self.ui.ps_1_y_le.text().toFloat()[0]
+        z = self.ui.ps_1_z_le.text().toFloat()[0]
+        pos=[x,y,z]
+        self.move_to_location (pos)
+
+    def move_2(self):
+        x = self.ui.ps_2_x_le.text().toFloat()[0]
+        y = self.ui.ps_2_y_le.text().toFloat()[0]
+        z = self.ui.ps_2_z_le.text().toFloat()[0]
+        pos=[x,y,z]
+        self.move_to_location (pos)
+
+    def move_3(self):
+        x = self.ui.ps_3_x_le.text().toFloat()[0]
+        y = self.ui.ps_3_y_le.text().toFloat()[0]
+        z = self.ui.ps_3_z_le.text().toFloat()[0]
+        pos=[x,y,z]
+        self.move_to_location (pos)
+
+    def move_4(self):
+        x = self.ui.ps_4_x_le.text().toFloat()[0]
+        y = self.ui.ps_4_y_le.text().toFloat()[0]
+        z = self.ui.ps_4_z_le.text().toFloat()[0]
+        pos=[x,y,z]
+        self.move_to_location (pos)
+
+    def move_5(self):
+        x = self.ui.ps_5_x_le.text().toFloat()[0]
+        y = self.ui.ps_5_y_le.text().toFloat()[0]
+        z = self.ui.ps_5_z_le.text().toFloat()[0]
+        pos=[x,y,z]
+        self.move_to_location (pos)
+
+    def move_6(self):
+        x = self.ui.ps_6_x_le.text().toFloat()[0]
+        y = self.ui.ps_6_y_le.text().toFloat()[0]
+        z = self.ui.ps_6_z_le.text().toFloat()[0]
+        pos=[x,y,z]
+        self.move_to_location (pos)
+
+
 
     def showMessage (self, infostring) :
         QtGui.QMessageBox.information (self, "LaserCutting : Info", infostring)
