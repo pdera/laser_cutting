@@ -633,37 +633,38 @@ class ESP300(QtGui.QWidget):
     #------------------------------------
 
     def setCur_1(self):
-        positions = self.get_positions()
+        #positions = self.get_positions()
+        positions=self.read_position(self.ser)
         self.ui.ps_1_x_le.setText("{:10.4f}".format(positions[0]))
         self.ui.ps_1_y_le.setText("{:10.4f}".format(positions[1]))
         self.ui.ps_1_z_le.setText("{:10.4f}".format(positions[2]))
 
     def setCur_2(self):
-        positions = self.get_positions()
+        positions=self.read_position(self.ser)
         self.ui.ps_2_x_le.setText("{:10.4f}".format(positions[0]))
         self.ui.ps_2_y_le.setText("{:10.4f}".format(positions[1]))
         self.ui.ps_2_z_le.setText("{:10.4f}".format(positions[2]))
 
-    def setCur_5(self):
-        positions = self.get_positions()
+    def setCur_3(self):
+        positions=self.read_position(self.ser)
         self.ui.ps_3_x_le.setText("{:10.4f}".format(positions[0]))
         self.ui.ps_3_y_le.setText("{:10.4f}".format(positions[1]))
         self.ui.ps_3_z_le.setText("{:10.4f}".format(positions[2]))
 
-    def setCur_5(self):
-        positions = self.get_positions()
+    def setCur_4(self):
+        positions=self.read_position(self.ser)
         self.ui.ps_4_x_le.setText("{:10.4f}".format(positions[0]))
         self.ui.ps_4_y_le.setText("{:10.4f}".format(positions[1]))
         self.ui.ps_4_z_le.setText("{:10.4f}".format(positions[2]))
 
     def setCur_5(self):
-        positions = self.get_positions()
+        positions=self.read_position(self.ser)
         self.ui.ps_5_x_le.setText("{:10.4f}".format(positions[0]))
         self.ui.ps_5_y_le.setText("{:10.4f}".format(positions[1]))
         self.ui.ps_5_z_le.setText("{:10.4f}".format(positions[2]))
 
     def setCur_6(self):
-        positions = self.get_positions()
+        positions=self.read_position(self.ser)
         self.ui.ps_6_x_le.setText("{:10.4f}".format(positions[0]))
         self.ui.ps_6_y_le.setText("{:10.4f}".format(positions[1]))
         self.ui.ps_6_z_le.setText("{:10.4f}".format(positions[2]))
