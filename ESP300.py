@@ -128,10 +128,11 @@ class ESP300(QtGui.QWidget):
             time.sleep (.1)
             string = '1HW\r'
             self.ser.write(string.encode('ascii'))
-
-            arcstring = '1HC%f,%f,360\r'%(Y,Z)
             totalDegrees = 360.*npasses
-            for ipass in range (npasses) :
+            arcstring = '1HC%f,%f,%d\r'%(Y,Z,totalDegrees)
+            irev = 0
+            lastAng = 0
+            for ipass in range (1) :
                 
                 self.ser.write(arcstring.encode('ascii'))
                 #time.sleep (2.)
@@ -147,6 +148,7 @@ class ESP300(QtGui.QWidget):
                     time.sleep (.2)
                     ln = self.ser.readline()
                     if (len (ln)) >0 :
+                        print len(ln) 
                         print ln
                         movingFlag=int(ln)
                     QtCore.QCoreApplication.processEvents()
@@ -157,7 +159,7 @@ class ESP300(QtGui.QWidget):
                     self.ser.write(string.encode('ascii'))
                     #time.sleep (.2)
                     ln = self.ser.readline()
-                    print 'curpos is : ', ln
+                    #print 'curpos is : ', ln
                     curpos = self.get_positionsYZ (ln)
                     ydiff = curpos[0]- Y
                     zdiff = curpos[1]- Z
@@ -165,9 +167,12 @@ class ESP300(QtGui.QWidget):
                     #print 'angle : ',angle
                     if (angle < 0) :
                         angle += 360.
-                    cumangle = ipass * 360 + angle
+                    if (lastAng > angle) :
+                        irev += 1
+                    lastAng = angle 
+                    cumangle = irev * 360 + angle
                     frac = cumangle / totalDegrees
-                    #print 'angle is : ', cumangle, '  frac is : ', frac
+                    print 'angle is : ', cumangle, '  frac is : ', frac
                     self.ui.progressBar_Circle.setValue(frac * 100)
 
                     if (self.cutCircle == False) :
@@ -179,7 +184,7 @@ class ESP300(QtGui.QWidget):
                         frac = 0
                         break
 
-                time.sleep(.1)
+                #time.sleep(.1)
 
             #delete group
             string = '1HX\r'
@@ -505,6 +510,7 @@ class ESP300(QtGui.QWidget):
             ln1=ln
             s=0
             e=0
+            print 'in get positions ln is ', ln1
             p = re.search (",", ln1)
             e = p.start() -1
             positions[0]=float(ln1[0:e])
