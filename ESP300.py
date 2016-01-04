@@ -155,12 +155,12 @@ class ESP300(QtGui.QWidget):
                     time.sleep (.05)
                     count = count +1
                     self.ser.flush()
-                    string = '1HP?\r'
+                    string = '1HC?\r'
                     self.ser.write(string.encode('ascii'))
                     #time.sleep (.2)
                     ln = self.ser.readline()
                     #print 'curpos is : ', ln
-                    curpos = self.get_positionsYZ (ln)
+                    curpos = self.get_positionsHC (ln)
                     ydiff = curpos[0]- Y
                     zdiff = curpos[1]- Z
                     angle = math.degrees(math.atan2 (zdiff,ydiff)) + 180.
@@ -516,7 +516,20 @@ class ESP300(QtGui.QWidget):
             positions[0]=float(ln1[0:e])
             positions[1]=float(ln1[p.start()+1:])
             return positions
-        
+
+    def get_positionsHC(self, ln):
+            positions=[0.00,0.00,0.00]
+            li=[0,1]
+            ln1=ln
+            s=0
+            e=0
+            print 'in get positions ln is ', ln1
+            p = re.search (",", ln1)
+            e = p.start() -1
+            positions[0]=float(ln1[0:e])
+            positions[1]=float(ln1[p.start()+1:])
+            return positions
+
     def display_positions(self, positions):
             self.lineEdit_position_X.setText("{:10.4f}".format(positions[0]))
             self.lineEdit_position_Y.setText("{:10.4f}".format(positions[1]))
