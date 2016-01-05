@@ -140,38 +140,50 @@ class ESP300(QtGui.QWidget):
                 
                 movingFlag = 0
                 count = 0
+                oldAngle = 0
 
                 while (movingFlag !=1) and (count < 10000)  :
                     self.ser.flush()
-                    string = '1HS?\r'
-                    self.ser.write(string.encode('ascii'))
+                    #string = '1HS?\r'
+                    #self.ser.write(string.encode('ascii'))
                     time.sleep (.2)
-                    ln = self.ser.readline()
-                    if (len (ln)) >0 :
-                        print len(ln) 
-                        print ln
-                        movingFlag=int(ln)
+                    #ln = self.ser.readline()
+                    #if (len (ln)) >0 :
+                    #    print len(ln) 
+                    #   print ln
+                    #   movingFlag=int(ln)
                     QtCore.QCoreApplication.processEvents()
                     time.sleep (.05)
                     count = count +1
                     self.ser.flush()
-                    string = '1HC?\r'
+                    string = '1HP?\r'
                     self.ser.write(string.encode('ascii'))
                     #time.sleep (.2)
-                    ln = self.ser.readline()
+                    ln=''
+                    while (len(ln) < 1):
+                        ln = self.ser.readline()
+                        #print 'HP returned : Nothing'
+                        time.sleep(.05)
                     #print 'curpos is : ', ln
-                    curpos = self.get_positionsHC (ln)
+                    print 'HP returned : ', ln
+                    curpos = self.get_positionsYZ (ln)
                     ydiff = curpos[0]- Y
                     zdiff = curpos[1]- Z
                     angle = math.degrees(math.atan2 (zdiff,ydiff)) + 180.
                     #print 'angle : ',angle
+                    if (count==1 and angle ==360.) :
+                        angle = 0.
                     if (angle < 0) :
                         angle += 360.
                     if (lastAng > angle) :
                         irev += 1
-                    lastAng = angle 
+                    lastAng = angle
+                    
                     cumangle = irev * 360 + angle
+                    
                     frac = cumangle / totalDegrees
+                    if (frac > .99999) :
+                        movingFlag = 1
                     print 'angle is : ', cumangle, '  frac is : ', frac
                     self.ui.progressBar_Circle.setValue(frac * 100)
 
@@ -403,8 +415,13 @@ class ESP300(QtGui.QWidget):
 
     def read_position(self, ser):
         if self.ser.isOpen():
+            self.ser.flush() ;
             self.ser.write("TP?\r".encode('ascii'))
-            ln=self.ser.readline()
+            while (1) :
+                ln=self.ser.readline()
+                if (len(ln) >1) :
+                    break
+
             print 'read_position is : ', ln
             positions=self.get_positions(ln)
             
