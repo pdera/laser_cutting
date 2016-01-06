@@ -85,11 +85,11 @@ class ESP300(QtGui.QWidget):
     def TraceCircle (self):
         print "Trace circle"
         # need to check if the center is already defined
-	nchars = self.lineEdit_CircleY.text().length()
-	if (nchars < 1) :
-		infostring = "No center defined : please do so"
-        	QtGui.QMessageBox.information (self, "laser_cutting", infostring)
-		return
+        nchars = self.lineEdit_CircleY.text().length()
+        if (nchars < 1) :
+            infostring = "No center defined : please do so"
+            QtGui.QMessageBox.information (self, "laser_cutting", infostring)
+            return
 
         Y       = float(self.lineEdit_CircleY.text())
         Z       = float(self.lineEdit_CircleZ.text())
