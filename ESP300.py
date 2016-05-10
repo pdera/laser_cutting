@@ -69,6 +69,8 @@ class ESP300(QtGui.QWidget):
         self.abortCircleButton.clicked.connect (self.abortCuttingCircle)
         self.cutCircle = True
         self.circleSpeed = .1
+        #average sample location
+        self.samp=[0.,5.194,10.7338,6.8443]
         self.lineEdit_CircleSpeed.setText ('0.1')
         self.MoveToTargetButton.clicked.connect (self.move_to_target)
 
@@ -81,21 +83,31 @@ class ESP300(QtGui.QWidget):
         ret = msg.exec_()
         if ret == QtGui.QMessageBox.Yes :
             self.goHome()
+        msg.setText ("Move to approx. sample position")
+        msg.setStandardButtons (QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+        ret = msg.exec_()
+        if ret == QtGui.QMessageBox.Yes :
+            self.goSample()
 
     def goHome (self) :
         if self.ser.isOpen () :
-            string = '1OR1\r'
+            string = '1OR2\r'
             self.ser.write(string.encode('ascii'))
             time.sleep (1)
-            string = '2OR1\r'
+            string = '2OR2\r'
             self.ser.write(string.encode('ascii'))
             time.sleep (1)
-            string = '3OR1\r'
+            string = '3OR2\r'
             self.ser.write(string.encode('ascii'))
             time.sleep (1)
 
-
-
+    # NEED TO ESTABLISH THE SAMP array for avg samp location
+    def goSample (self) :
+        if self.ser.isOpen () :
+            #move z, y, x
+            self.move_one_motor (self.ser, 3, self.samp[3])
+            self.move_one_motor (self.ser, 2, self.samp[2])
+            self.move_one_motor (self.ser, 1, self.samp[1])
 
     def abortCuttingCircle (self) :
         self.cutCircle = False
