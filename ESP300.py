@@ -72,6 +72,31 @@ class ESP300(QtGui.QWidget):
         self.lineEdit_CircleSpeed.setText ('0.1')
         self.MoveToTargetButton.clicked.connect (self.move_to_target)
 
+        #check if user would like to move to home position
+        msg = QtGui.QMessageBox()
+        msg.setIcon(QtGui.QMessageBox.Question)
+        msg.setText ("Would you like to HOME the stage")
+        msg.setWindowTitle ("Laser Cutting")
+        msg.setStandardButtons (QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+        ret = msg.exec_()
+        if ret == QtGui.QMessageBox.Yes :
+            self.goHome()
+
+    def goHome (self) :
+        if self.ser.isOpen () :
+            string = '1OR1\r'
+            self.ser.write(string.encode('ascii'))
+            time.sleep (1)
+            string = '2OR1\r'
+            self.ser.write(string.encode('ascii'))
+            time.sleep (1)
+            string = '3OR1\r'
+            self.ser.write(string.encode('ascii'))
+            time.sleep (1)
+
+
+
+
     def abortCuttingCircle (self) :
         self.cutCircle = False
 
