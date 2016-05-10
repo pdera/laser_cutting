@@ -81,6 +81,7 @@ class ESP300(QtGui.QWidget):
         msg.setWindowTitle ("Laser Cutting")
         msg.setStandardButtons (QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
         ret = msg.exec_()
+        self.connect (self.ser)
         if ret == QtGui.QMessageBox.Yes :
             self.goHome()
         msg.setText ("Move to approx. sample position")
@@ -88,6 +89,25 @@ class ESP300(QtGui.QWidget):
         ret = msg.exec_()
         if ret == QtGui.QMessageBox.Yes :
             self.goSample()
+        self.setLimits()
+        self.connect (self.ser)
+
+
+    def setLimits (self) :
+        if self.ser.isOpen():
+            string = '1SL-12.870\r'
+            self.ser.write(string.encode('ascii'))
+            string = '1SR12.900\r'
+            self.ser.write(string.encode('ascii'))
+            string = '2SL0.005\r'
+            self.ser.write(string.encode('ascii'))
+            string = '2SR31.495\r'
+            self.ser.write(string.encode('ascii'))
+            string = '3SL0.0224\r'
+            self.ser.write(string.encode('ascii'))
+            string = '3SR34.440\r'
+            self.ser.write(string.encode('ascii'))
+
 
     def goHome (self) :
         if self.ser.isOpen () :
