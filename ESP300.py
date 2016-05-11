@@ -80,30 +80,31 @@ class ESP300(QtGui.QWidget):
         msg.setText ("Would you like to HOME the stage")
         msg.setWindowTitle ("Laser Cutting")
         msg.setStandardButtons (QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
-        ret = msg.exec_()
-        self.connect (self.ser)
-        if ret == QtGui.QMessageBox.Yes :
-            self.goHome()
+        #ret = msg.exec_()
+        self.connectSerial (self.ser, True)
+        self.setLimits()
+        #if ret == QtGui.QMessageBox.Yes :
+        #    self.goHome()
         msg.setText ("Move to approx. sample position")
         msg.setStandardButtons (QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
         ret = msg.exec_()
         if ret == QtGui.QMessageBox.Yes :
             self.goSample()
-        self.setLimits()
-        self.connect (self.ser)
+
+        self.connectSerial (self.ser, False)
 
 
     def setLimits (self) :
         if self.ser.isOpen():
-            string = '1SL-12.870\r'
+            string = '1SL-12.878\r'
             self.ser.write(string.encode('ascii'))
             string = '1SR12.900\r'
             self.ser.write(string.encode('ascii'))
-            string = '2SL0.005\r'
+            string = '2SL0.000\r'
             self.ser.write(string.encode('ascii'))
             string = '2SR31.495\r'
             self.ser.write(string.encode('ascii'))
-            string = '3SL0.0224\r'
+            string = '3SL-0.0223\r'
             self.ser.write(string.encode('ascii'))
             string = '3SR34.440\r'
             self.ser.write(string.encode('ascii'))
@@ -111,13 +112,7 @@ class ESP300(QtGui.QWidget):
 
     def goHome (self) :
         if self.ser.isOpen () :
-            string = '1OR2\r'
-            self.ser.write(string.encode('ascii'))
-            time.sleep (1)
-            string = '2OR2\r'
-            self.ser.write(string.encode('ascii'))
-            time.sleep (1)
-            string = '3OR2\r'
+            string = '0OR1\r'
             self.ser.write(string.encode('ascii'))
             time.sleep (1)
 
@@ -654,6 +649,22 @@ class ESP300(QtGui.QWidget):
             
     def connect(self, ser):
         if self.pushButton_Connect.text() == 'Connect':
+            self.ser.baudrate = 19200
+            self.ser.port = 0
+            self.ser.bytesize=8
+            self.ser.parity='N'
+            self.ser.stopbits=1
+            self.ser.timeout=0.5
+            self.ser.open()
+            self.read_and_update_position(self.ser)
+            self.read_and_update_targetposition (self.ser)
+            self.pushButton_Connect.setText('Disconnect')
+        else:
+            self.pushButton_Connect.setText('Connect')
+            self.ser.close()
+
+    def connectSerial (self, ser, conFlag):
+        if conFlag:
             self.ser.baudrate = 19200
             self.ser.port = 0
             self.ser.bytesize=8
