@@ -71,6 +71,7 @@ class ESP300(QtGui.QWidget):
         self.circleSpeed = .1
         #average sample location
         self.samp=[0.,5.194,10.7338,6.8443]
+        self.limits = [(-12.878,12.907),(0.,31.5),(-0.0223,34.441)]
         self.lineEdit_CircleSpeed.setText ('0.1')
         self.MoveToTargetButton.clicked.connect (self.move_to_target)
 
@@ -82,7 +83,7 @@ class ESP300(QtGui.QWidget):
         msg.setStandardButtons (QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
         #ret = msg.exec_()
         self.connectSerial (self.ser, True)
-        self.setLimits()
+        #self.setLimits()
         #if ret == QtGui.QMessageBox.Yes :
         #    self.goHome()
         msg.setText ("Move to approx. sample position")
@@ -108,6 +109,13 @@ class ESP300(QtGui.QWidget):
             self.ser.write(string.encode('ascii'))
             string = '3SR34.440\r'
             self.ser.write(string.encode('ascii'))
+
+    def checkLimitsCircle (self, center_pos, radius):
+        # get the most n,s,e,w points
+        most_north = center_pos[1]+radius
+        most_south = center_pos[1]-radius
+        most_west = center_pos[2] - radius
+        most_east = center_pos[2] + radius
 
 
     def goHome (self) :
