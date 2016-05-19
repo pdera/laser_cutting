@@ -71,16 +71,20 @@ class ESP300(QtGui.QWidget):
         self.circleSpeed = .1
         #average sample location
         self.samp=[0.,5.194,10.7338,6.8443]
+        # limits - 1st tuple is x, 2nd is y, 3rd is z
         self.limits = [(-12.878,12.907),(0.,31.5),(-0.0223,34.441)]
         self.lineEdit_CircleSpeed.setText ('0.1')
         self.MoveToTargetButton.clicked.connect (self.move_to_target)
 
+        str = "Turn on motor controller, and home axes"
+
+
         #check if user would like to move to home position
         msg = QtGui.QMessageBox()
         msg.setIcon(QtGui.QMessageBox.Question)
-        msg.setText ("Would you like to HOME the stage")
+        msg.setText (str)
         msg.setWindowTitle ("Laser Cutting")
-        msg.setStandardButtons (QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+        msg.setStandardButtons (QtGui.QMessageBox.information)
         #ret = msg.exec_()
         self.connectSerial (self.ser, True)
         #self.setLimits()
@@ -112,10 +116,28 @@ class ESP300(QtGui.QWidget):
 
     def checkLimitsCircle (self, center_pos, radius):
         # get the most n,s,e,w points
-        most_north = center_pos[1]+radius
-        most_south = center_pos[1]-radius
+        bFlag = False
+        most_north = center_pos[1] + radius
+        most_south = center_pos[1] - radius
         most_west = center_pos[2] - radius
         most_east = center_pos[2] + radius
+
+        # check if within z bounds
+        if (most_north >= self.limits[2][1]) :
+             bFlag = True ;
+        if (most_south <= self.limits[2][0]) :
+            bFlag = True 
+        if (most_east >= self.limits[1][1]) :
+            bFlag = True
+        if (most_west <= self.limits[1][0] ) :
+            bFlag = True
+        if not bFlag :
+            return False
+
+
+
+
+        
 
 
     def goHome (self) :
@@ -451,6 +473,7 @@ class ESP300(QtGui.QWidget):
         print "Joystick"
 
     def generate_circle_trajectory (self, center, radius, npoint):
+        self.checkLimitsCircle (center, radius)
         traj=np.zeros((npoint+1,2),dtype=np.float16)
         step=2.0*math.pi/npoint
         for i in range(0, int(npoint)):
