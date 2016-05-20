@@ -173,32 +173,6 @@
     </item>
    </layout>
   </widget>
-  <widget class="QPushButton" name="pushButton_Connect">
-   <property name="geometry">
-    <rect>
-     <x>170</x>
-     <y>20</y>
-     <width>131</width>
-     <height>41</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Connect</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="pushButton_Joystick">
-   <property name="geometry">
-    <rect>
-     <x>30</x>
-     <y>20</y>
-     <width>131</width>
-     <height>41</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Joystick OFF</string>
-   </property>
-  </widget>
   <widget class="QPushButton" name="pushButton_HomeX">
    <property name="geometry">
     <rect>
@@ -274,7 +248,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>3</number>
+    <number>2</number>
    </property>
    <widget class="QWidget" name="tab">
     <attribute name="title">
@@ -1240,18 +1214,69 @@
     <string>Target</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="MoveToTargetButton">
+  <widget class="QWidget" name="">
    <property name="geometry">
     <rect>
-     <x>310</x>
-     <y>20</y>
-     <width>151</width>
-     <height>41</height>
+     <x>10</x>
+     <y>0</y>
+     <width>591</width>
+     <height>71</height>
     </rect>
    </property>
-   <property name="text">
-    <string>Move to Target XYZ</string>
-   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_7">
+    <item>
+     <widget class="QPushButton" name="pushButton_Joystick">
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>33</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>Joystick OFF</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="pushButton_Connect">
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>33</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>Connect</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="MoveToTargetButton">
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>33</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>Move to Target XYZ</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="softLimitsButton">
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>33</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>Set Soft Limits</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
   </widget>
  </widget>
  <tabstops>

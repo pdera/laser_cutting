@@ -7,6 +7,7 @@ import math
 import joystick
 import numpy as np
 from array import *
+from softLimitsDlg import *
 
 class ESP300(QtGui.QWidget):
 
@@ -56,6 +57,8 @@ class ESP300(QtGui.QWidget):
         self.ui.ps_5_move.clicked.connect (self.move_5)
         self.ui.ps_6_move.clicked.connect (self.move_6)
 
+        #motor control soft limits
+        self.ui.softLimitsButton.clicked.connect (self.newLimits)
 
 
         self.pushButton_Joystick.clicked.connect(self.joystick_on)
@@ -99,7 +102,40 @@ class ESP300(QtGui.QWidget):
         self.connectSerial (self.ser, False)
 
 
+    def newLimits (self) :
+        sldlg = softLimitsDlg ()
+        sldlg.setVals (self.limits[0], self.limits[1], self.limits[2])
+        res = sldlg.exec_()
+        print "result from dialog is : ", res
+        if (res) :
+            self.limits[0] = (sldlg.xmin, sldlg.xmax)
+            self.limits[1] = (sldlg.ymin, sldlg.ymax)
+            self.limits[2] = (sldlg.zmin, sldlg.zmax)
+        self.setLimits()
+
+
+
     def setLimits (self) :
+        if not self.ser.isOpen() :
+            self.showMessage ('Establish connection with the controller first')
+            return
+        string = '1SL%.3f\r'%self.limits[0][0]
+        self.ser.write(string.encode('ascii'))
+        string = '1SR%.3f\r'%self.limits[0][1]
+        self.ser.write(string.encode('ascii'))
+        string = '2SL%.3f\r'%self.limits[1][0]
+        self.ser.write(string.encode('ascii'))
+        string = '2SR%.3f\r'%self.limits[1][1]
+        self.ser.write(string.encode('ascii'))
+        string = '3SL%.3f\r'%self.limits[2][0]
+        self.ser.write(string.encode('ascii'))
+        string = '3SR%.3f\r'%self.limits[2][1]
+        self.ser.write(string.encode('ascii'))
+
+
+
+
+    def setLimitsOld (self) :
         if self.ser.isOpen():
             string = '1SL-12.878\r'
             self.ser.write(string.encode('ascii'))
@@ -134,7 +170,7 @@ class ESP300(QtGui.QWidget):
         # if ok, return true
         if not bFlag :
             return True
-        msg = QtGui.QMessageBox ()
+        msg = QtGui.QMessageBox()
         msg.setWindowTitle ("Laser Cutting")
         msg.setStandardButtons (QtGui.QMessageBox.Ok)
         msg.setText ("Circle out of bounds" )
@@ -156,6 +192,7 @@ class ESP300(QtGui.QWidget):
             bFlag = True
         if not bFlag :
             return True
+        msg = QtGui.QMessageBox ()
         msg.setWindowTitle ("Laser Cutting")
         msg.setStandardButtons (QtGui.QMessageBox.Ok)
         msg.setText ("Attempt to move or cut out of bounds" )
@@ -165,22 +202,23 @@ class ESP300(QtGui.QWidget):
      # check within bounds
     def checkPointsXYZ (self, pointloc_x, pointloc_y, pointloc_z) :
         bFlag = False
-        if pointloc_x < self.self.limits[0][0] :
+        if pointloc_x < self.limits[0][0] :
             bFlag = True
-        if pointloc_x > self.self.limits[0][1] :
-            bFlag = True
-
-        if pointloc_y < self.self.limits[1][0] :
-            bFlag = True
-        if pointloc_y > self.self.limits[1][1] :
+        if pointloc_x > self.limits[0][1] :
             bFlag = True
 
-        if pointloc_z < self.self.limits[2][0] :
+        if pointloc_y < self.limits[1][0] :
             bFlag = True
-        if pointloc_z > self.self.limits[2][1] :
+        if pointloc_y > self.limits[1][1] :
+            bFlag = True
+
+        if pointloc_z < self.limits[2][0] :
+            bFlag = True
+        if pointloc_z > self.limits[2][1] :
             bFlag = True
         if not bFlag :
             return True
+        msg = QtGui.QMessageBox ()
         msg.setWindowTitle ("Laser Cutting")
         msg.setStandardButtons (QtGui.QMessageBox.Ok)
         msg.setText ("Attempt to move out of bounds" )
@@ -226,6 +264,11 @@ class ESP300(QtGui.QWidget):
         Y       = float(self.lineEdit_CircleY.text())
         Z       = float(self.lineEdit_CircleZ.text())
         radius  = float(self.lineEdit_CircleRadius.text())
+        if radius > 1. :
+            msg =QtGui.QMessageBox.question (self, "Radius > 1mm", "Are you sure you want to cut", QtGui.QMessageBox.Yes |QtGui.QMessageBox.No)
+
+            if msg == QtGui.QMessageBox.No :
+                return
         npasses = int(self.lineEdit_numCirclePasses.text())
         self.circleSpeed = float(self.lineEdit_CircleSpeed.text())
         #nsteps  = float(self.lineEdit_CircleSegments.text())
@@ -242,7 +285,7 @@ class ESP300(QtGui.QWidget):
 
         centpos = [y0,z0]
 
-        status = self.checkLimitsCircle (centos,radius)
+        status = self.checkLimitsCircle (centpos,radius)
         if not status :
             return
 
@@ -663,6 +706,7 @@ class ESP300(QtGui.QWidget):
                 string=str(motor)+'PA '+str(target)+'\r'
                 self.ser.write(string.encode('ascii'))
                 self.wait_for_end_of_motion(ser, motor)
+                time.sleep (1.)
                 self.read_and_update_position(ser)
             else:
                 self.showMessage ('Establish connection with the controller first')
