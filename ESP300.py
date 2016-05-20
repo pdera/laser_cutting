@@ -131,6 +131,7 @@ class ESP300(QtGui.QWidget):
             bFlag = True
         if (most_west < self.limits[1][0] ) :
             bFlag = True
+        # if ok, return true
         if not bFlag :
             return True
         msg = QtGui.QMessageBox ()
@@ -141,7 +142,7 @@ class ESP300(QtGui.QWidget):
         return False
 
 
-    # points are in y, z
+    # check within bounds
     def checkPoints (self, pointloc_y, pointloc_z) :
         bFlag = False
         if pointloc_y < self.self.limits[1][0] :
@@ -161,8 +162,8 @@ class ESP300(QtGui.QWidget):
         ret = msg.exec_()
         return False
 
-     # points are in y, z
-    def checkPoints (self, pointloc_x, pointloc_y, pointloc_z) :
+     # check within bounds
+    def checkPointsXYZ (self, pointloc_x, pointloc_y, pointloc_z) :
         bFlag = False
         if pointloc_x < self.self.limits[0][0] :
             bFlag = True
@@ -370,10 +371,10 @@ class ESP300(QtGui.QWidget):
         Z_ll = Z_ul
 
         status = self.checkPoints (Y_ul, Z_ul)
-        if (status) :
+        if not status :
             return
         status = self.checkPoints (Y_lr, Z_lr)
-        if (status) :
+        if not status :
             return
 
         # get the dist of each segment
@@ -782,14 +783,23 @@ class ESP300(QtGui.QWidget):
     def move_to_target (self) :
         pos = self.read_position (self.ser)
         xtarget = self.lineEdit_target_X.text().toFloat()[0]
+        ytarget = self.lineEdit_target_Y.text().toFloat()[0]
+        ztarget = self.lineEdit_target_Z.text().toFloat()[0]
+
+
+        status = self.checkPointsXYZ (xtarget, ytarget, ztarget)
+        if not status :
+            return
+
         #magmove = xtarget - pos[0]
         self.move_one_motor (self.ser, 1, xtarget)
-        ytarget = self.lineEdit_target_Y.text().toFloat()[0]
+
         #magmove = ytarget - pos[1]
         self.move_one_motor (self.ser, 2, ytarget)
-        ztarget = self.lineEdit_target_Z.text().toFloat()[0]
+
         #magmove = ztarget - pos[2]
         self.move_one_motor (self.ser, 3, ztarget)
+
 
     def move_to_location (self, pos) :
         pos_cur = self.read_position (self.ser)
