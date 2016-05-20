@@ -81,11 +81,11 @@ class ESP300(QtGui.QWidget):
 
         #check if user would like to move to home position
         msg = QtGui.QMessageBox()
-        msg.setIcon(QtGui.QMessageBox.Question)
+        #msg.setIcon(QtGui.QMessageBox.
         msg.setText (str)
         msg.setWindowTitle ("Laser Cutting")
-        msg.setStandardButtons (QtGui.QMessageBox.information)
-        #ret = msg.exec_()
+        msg.setStandardButtons (QtGui.QMessageBox.Ok)
+        ret = msg.exec_()
         self.connectSerial (self.ser, True)
         #self.setLimits()
         #if ret == QtGui.QMessageBox.Yes :
@@ -119,25 +119,72 @@ class ESP300(QtGui.QWidget):
         bFlag = False
         most_north = center_pos[1] + radius
         most_south = center_pos[1] - radius
-        most_west = center_pos[2] - radius
-        most_east = center_pos[2] + radius
+        most_west = center_pos[0] - radius
+        most_east = center_pos[0] + radius
 
         # check if within z bounds
-        if (most_north >= self.limits[2][1]) :
+        if (most_north > self.limits[2][1]) :
              bFlag = True ;
-        if (most_south <= self.limits[2][0]) :
+        if (most_south < self.limits[2][0]) :
             bFlag = True 
-        if (most_east >= self.limits[1][1]) :
+        if (most_east > self.limits[1][1]) :
             bFlag = True
-        if (most_west <= self.limits[1][0] ) :
+        if (most_west < self.limits[1][0] ) :
             bFlag = True
         if not bFlag :
-            return False
+            return True
+        msg = QtGui.QMessageBox ()
+        msg.setWindowTitle ("Laser Cutting")
+        msg.setStandardButtons (QtGui.QMessageBox.Ok)
+        msg.setText ("Circle out of bounds" )
+        ret = msg.exec_()
+        return False
 
 
+    # points are in y, z
+    def checkPoints (self, pointloc_y, pointloc_z) :
+        bFlag = False
+        if pointloc_y < self.self.limits[1][0] :
+            bFlag = True
+        if pointloc_y > self.self.limits[1][1] :
+            bFlag = True
 
+        if pointloc_z < self.self.limits[2][0] :
+            bFlag = True
+        if pointloc_z > self.self.limits[2][1] :
+            bFlag = True
+        if not bFlag :
+            return True
+        msg.setWindowTitle ("Laser Cutting")
+        msg.setStandardButtons (QtGui.QMessageBox.Ok)
+        msg.setText ("Attempt to move or cut out of bounds" )
+        ret = msg.exec_()
+        return False
 
-        
+     # points are in y, z
+    def checkPoints (self, pointloc_x, pointloc_y, pointloc_z) :
+        bFlag = False
+        if pointloc_x < self.self.limits[0][0] :
+            bFlag = True
+        if pointloc_x > self.self.limits[0][1] :
+            bFlag = True
+
+        if pointloc_y < self.self.limits[1][0] :
+            bFlag = True
+        if pointloc_y > self.self.limits[1][1] :
+            bFlag = True
+
+        if pointloc_z < self.self.limits[2][0] :
+            bFlag = True
+        if pointloc_z > self.self.limits[2][1] :
+            bFlag = True
+        if not bFlag :
+            return True
+        msg.setWindowTitle ("Laser Cutting")
+        msg.setStandardButtons (QtGui.QMessageBox.Ok)
+        msg.setText ("Attempt to move out of bounds" )
+        ret = msg.exec_()
+        return False
 
 
     def goHome (self) :
@@ -162,6 +209,8 @@ class ESP300(QtGui.QWidget):
         str = QtCore.QString ("%1").arg(value)
         self.lineEdit_CircleSpeed.setText (str)
         self.circleSpeed = value
+
+
 
 
     def TraceCircle (self):
@@ -190,7 +239,11 @@ class ESP300(QtGui.QWidget):
         y0 = Y - radius
         z0 = Z
 
+        centpos = [y0,z0]
 
+        status = self.checkLimitsCircle (centos,radius)
+        if not status :
+            return
 
         print Y,Z
         print y0,z0
@@ -315,6 +368,14 @@ class ESP300(QtGui.QWidget):
         Z_ur = Z_lr
         Y_ll = Y_lr
         Z_ll = Z_ul
+
+        status = self.checkPoints (Y_ul, Z_ul)
+        if (status) :
+            return
+        status = self.checkPoints (Y_lr, Z_lr)
+        if (status) :
+            return
+
         # get the dist of each segment
         seg0start = [Z_ul, Y_ul]
         seg0end = [Z_ur, Y_ur]
@@ -389,6 +450,14 @@ class ESP300(QtGui.QWidget):
         zytraj = self.generate_line_trajectory([startZ,startY],[endZ,endY],nsteps)
         delay = self.ui.lineEdit_LineDelay.text().toFloat()[0]
         npasses = self.ui.comboBox_LinePasses.currentIndex() + 1
+
+        status = self.checkPoints (startY, startZ)
+        if (status) :
+            return
+        status = self.checkPoints (endY, endZ)
+        if (status) :
+            return
+
 
         fraction = 1. / float(npasses) * 100
         for iter in range (npasses) :
