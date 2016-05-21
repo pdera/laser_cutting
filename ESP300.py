@@ -42,6 +42,7 @@ class ESP300(QtGui.QWidget):
         self.pushButton_DefineULRect.clicked.connect(self.DefineULRect)
         self.pushButton_DefineLRRect.clicked.connect(self.DefineLRRect)
         self.pushButton_ReadCenter.clicked.connect (self.DefineCenter)
+        self.ui.updateVelocityButton.clicked.connect (self.updateVelocity)
 
         ### Saved position functions
         self.ui.ps_1_setcur.clicked.connect(self.setCur_1)
@@ -98,8 +99,13 @@ class ESP300(QtGui.QWidget):
         ret = msg.exec_()
         if ret == QtGui.QMessageBox.Yes :
             self.goSample()
-
+        self.velocity = .1
+        str = "%.3f"%self.velocity
+        self.ui.velocityLE.setText (str)
+        self.updateVelocity ()
         self.connectSerial (self.ser, False)
+
+
 
 
     def newLimits (self) :
@@ -113,6 +119,21 @@ class ESP300(QtGui.QWidget):
             self.limits[2] = (sldlg.zmin, sldlg.zmax)
         self.setLimits()
 
+
+    def setVelocity (self) :
+        if not self.ser.isOpen() :
+            self.showMessage ('Can not set motor velocity\r\nEstablish connection with the controller first')
+            return
+        string = '1VA%f'%self.velocity
+        self.ser.write(string.encode('ascii'))
+        string = '2VA%f'%self.velocity
+        self.ser.write(string.encode('ascii'))
+        string = '3VA%f'%self.velocity
+        self.ser.write(string.encode('ascii'))
+
+    def updateVelocity (self) :
+        self.velocity = self.ui.velocityLE.text().toFloat()[0]
+        self.setVelocity()
 
 
     def setLimits (self) :
@@ -131,6 +152,7 @@ class ESP300(QtGui.QWidget):
         self.ser.write(string.encode('ascii'))
         string = '3SR%.3f\r'%self.limits[2][1]
         self.ser.write(string.encode('ascii'))
+
 
 
 
