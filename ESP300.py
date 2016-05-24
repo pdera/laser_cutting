@@ -99,10 +99,10 @@ class ESP300(QtGui.QWidget):
         ret = msg.exec_()
         if ret == QtGui.QMessageBox.Yes :
             self.goSample()
-        self.velocity = .1
+        self.getVelocity ()
         str = "%.3f"%self.velocity
         self.ui.velocityLE.setText (str)
-        self.updateVelocity ()
+        #self.updateVelocity ()
         self.connectSerial (self.ser, False)
 
 
@@ -120,18 +120,38 @@ class ESP300(QtGui.QWidget):
         self.setLimits()
 
 
+    def getVelocity (self) :
+        if not self.ser.isOpen() :
+            self.showMessage ('Can not get motor velocity\r\nEstablish connection with the controller first')
+            return
+        #string = '1VA%f'%self.velocity
+        #self.ser.write(string.encode('ascii'))
+
+        self.ser.flush() ;
+        self.ser.write("2VA?\r".encode('ascii'))
+        while (1) :
+            ln=self.ser.readline()
+            print ln
+            if (len(ln) >1) :
+                break
+        self.velocity = float(ln)
+        print 'velocity is : ', self.velocity
+
     def setVelocity (self) :
         if not self.ser.isOpen() :
             self.showMessage ('Can not set motor velocity\r\nEstablish connection with the controller first')
             return
-        string = '1VA%f'%self.velocity
+        #string = '1VA%f'%self.velocity
+        #self.ser.write(string.encode('ascii'))
+        string = '2VA%.2f\r'%self.velocity
         self.ser.write(string.encode('ascii'))
-        string = '2VA%f'%self.velocity
+        string = '3VA%.2f\r'%self.velocity
         self.ser.write(string.encode('ascii'))
-        string = '3VA%f'%self.velocity
-        self.ser.write(string.encode('ascii'))
+        self.getVelocity()
 
     def updateVelocity (self) :
+        #print 'velocity update not implemented'
+        #return
         self.velocity = self.ui.velocityLE.text().toFloat()[0]
         self.setVelocity()
 
@@ -203,14 +223,14 @@ class ESP300(QtGui.QWidget):
     # check within bounds
     def checkPoints (self, pointloc_y, pointloc_z) :
         bFlag = False
-        if pointloc_y < self.self.limits[1][0] :
+        if pointloc_y < self.limits[1][0] :
             bFlag = True
-        if pointloc_y > self.self.limits[1][1] :
+        if pointloc_y > self.limits[1][1] :
             bFlag = True
 
-        if pointloc_z < self.self.limits[2][0] :
+        if pointloc_z < self.limits[2][0] :
             bFlag = True
-        if pointloc_z > self.self.limits[2][1] :
+        if pointloc_z > self.limits[2][1] :
             bFlag = True
         if not bFlag :
             return True
@@ -518,10 +538,10 @@ class ESP300(QtGui.QWidget):
         npasses = self.ui.comboBox_LinePasses.currentIndex() + 1
 
         status = self.checkPoints (startY, startZ)
-        if (status) :
+        if not status :
             return
         status = self.checkPoints (endY, endZ)
-        if (status) :
+        if not status :
             return
 
 
@@ -643,6 +663,7 @@ class ESP300(QtGui.QWidget):
             self.ser.write("TP?\r".encode('ascii'))
             while (1) :
                 ln=self.ser.readline()
+                print ln
                 if (len(ln) >1) :
                     break
 
