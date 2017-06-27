@@ -415,9 +415,19 @@ class ESP300(QtGui.QWidget):
                     self.ui.progressBar_Circle.setValue(frac * 100)
 
                     if (self.cutCircle == False) :
+                        # try to slow down before stopping in steps
+                        string = '1HV%f\r' % (self.circleSpeed/2.)
+                        print string
+                        self.ser.write(string.encode('ascii'))
+                        time.sleep (0.25)
+                        string = '1HV%f\r' % (self.circleSpeed/4.)
+                        print string
+                        self.ser.write(string.encode('ascii'))
+                        time.sleep(0.25)
+                        # now stop
                         string = '1HS\r'
                         self.ser.write(string.encode('ascii'))
-                        string = '1HW\r'
+                        string = '1HW200'
                         self.ser.write(string.encode('ascii'))
                         print 'trying to abort'
                         frac = 0
@@ -838,8 +848,8 @@ class ESP300(QtGui.QWidget):
     def connect(self, ser):
         if self.pushButton_Connect.text() == 'Connect':
             self.ser.baudrate = 19200
-            self.ser.port = 0
-            self.ser.bytesize=8
+            self.ser.port = 'COM8'
+            self.ser.bytesize= 8
             self.ser.parity='N'
             self.ser.stopbits=1
             self.ser.timeout=0.5
@@ -854,7 +864,7 @@ class ESP300(QtGui.QWidget):
     def connectSerial (self, ser, conFlag):
         if conFlag:
             self.ser.baudrate = 19200
-            self.ser.port = 0
+            self.ser.port = 'COM8'
             self.ser.bytesize=8
             self.ser.parity='N'
             self.ser.stopbits=1
