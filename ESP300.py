@@ -303,8 +303,8 @@ class ESP300(QtGui.QWidget):
             QtGui.QMessageBox.information (self, "laser_cutting", infostring)
             return
 
+        X       = float(self.lineEdit_CircleX.text())
         Y       = float(self.lineEdit_CircleY.text())
-        Z       = float(self.lineEdit_CircleZ.text())
         radius  = float(self.lineEdit_CircleRadius.text())
         if radius > 1. :
             msg =QtGui.QMessageBox.question (self, "Radius > 1mm", "Are you sure you want to cut", QtGui.QMessageBox.Yes |QtGui.QMessageBox.No)
@@ -323,20 +323,20 @@ class ESP300(QtGui.QWidget):
         #move to a point out on the radius of the circle
 
         y0 = Y - radius
-        z0 = Z
+        x0 = X
 
-        centpos = [y0,z0]
+        centpos = [y0,x0]
 
         status = self.checkLimitsCircle (centpos,radius)
         if not status :
             return
 
-        print Y,Z
-        print y0,z0
+        print Y,X
+        print y0,x0
         if self.ser.isOpen():
 
-            #establish group
-            string='1HN2,3\r'
+            #establish group with y,x
+            string='1HN2,1\r'
             self.ser.write(string.encode('ascii'))
             #set vectorial velocity, acceleration and deceleration
             string = '1HV%f\r'%(self.circleSpeed)
@@ -350,13 +350,13 @@ class ESP300(QtGui.QWidget):
             string = '1HO\r'
             self.ser.write(string.encode('ascii'))
             #move to top of circle
-            string = '1HL%f,%f\r'%(y0, z0)
+            string = '1HL%f,%f\r'%(y0, x0)
             self.ser.write(string.encode('ascii'))
             time.sleep (.1)
             string = '1HW\r'
             self.ser.write(string.encode('ascii'))
             totalDegrees = 360.*npasses
-            arcstring = '1HC%f,%f,%d\r'%(Y,Z,totalDegrees)
+            arcstring = '1HC%f,%f,%d\r'%(Y,X,totalDegrees)
             irev = 0
             lastAng = 0
             for ipass in range (1) :
@@ -395,7 +395,7 @@ class ESP300(QtGui.QWidget):
                     print 'HP returned : ', ln
                     curpos = self.get_positionsYZ (ln)
                     ydiff = curpos[0]- Y
-                    zdiff = curpos[1]- Z
+                    zdiff = curpos[1]- X
                     angle = math.degrees(math.atan2 (zdiff,ydiff)) + 180.
                     #print 'angle : ',angle
                     if (count==1 and angle ==360.) :
@@ -419,11 +419,16 @@ class ESP300(QtGui.QWidget):
                         string = '1HV%f\r' % (self.circleSpeed/2.)
                         print string
                         self.ser.write(string.encode('ascii'))
-                        time.sleep (0.25)
+                        time.sleep (1.0)
                         string = '1HV%f\r' % (self.circleSpeed/4.)
                         print string
                         self.ser.write(string.encode('ascii'))
-                        time.sleep(0.25)
+                        time.sleep(1.)
+
+                        string = '1HV%f\r' % (self.circleSpeed / 8.)
+                        print string
+                        self.ser.write(string.encode('ascii'))
+                        time.sleep(1.)
                         # now stop
                         string = '1HS\r'
                         self.ser.write(string.encode('ascii'))
