@@ -304,7 +304,7 @@ class ESP300(QtGui.QWidget):
             return
 
         X       = float(self.lineEdit_CircleX.text())
-        Y       = float(self.lineEdit_CircleY.text())
+        Z       = float(self.lineEdit_CircleZ.text())
         radius  = float(self.lineEdit_CircleRadius.text())
         if radius > 1. :
             msg =QtGui.QMessageBox.question (self, "Radius > 1mm", "Are you sure you want to cut", QtGui.QMessageBox.Yes |QtGui.QMessageBox.No)
@@ -322,7 +322,7 @@ class ESP300(QtGui.QWidget):
         # and generate the arc....
         #move to a point out on the radius of the circle
 
-        y0 = Y - radius
+        y0 = Z - radius
         x0 = X
 
         centpos = [y0,x0]
@@ -331,12 +331,12 @@ class ESP300(QtGui.QWidget):
         if not status :
             return
 
-        print Y,X
+        print Z,X
         print y0,x0
         if self.ser.isOpen():
 
-            #establish group with y,x
-            string='1HN2,1\r'
+            #establish group with z,x
+            string='1HN3,1\r'
             self.ser.write(string.encode('ascii'))
             #set vectorial velocity, acceleration and deceleration
             string = '1HV%f\r'%(self.circleSpeed)
@@ -356,7 +356,7 @@ class ESP300(QtGui.QWidget):
             string = '1HW\r'
             self.ser.write(string.encode('ascii'))
             totalDegrees = 360.*npasses
-            arcstring = '1HC%f,%f,%d\r'%(Y,X,totalDegrees)
+            arcstring = '1HC%f,%f,%d\r'%(Z,X,totalDegrees)
             irev = 0
             lastAng = 0
             for ipass in range (1) :
@@ -394,7 +394,7 @@ class ESP300(QtGui.QWidget):
                     #print 'curpos is : ', ln
                     print 'HP returned : ', ln
                     curpos = self.get_positionsYZ (ln)
-                    ydiff = curpos[0]- Y
+                    ydiff = curpos[0]- Z
                     zdiff = curpos[1]- X
                     angle = math.degrees(math.atan2 (zdiff,ydiff)) + 180.
                     #print 'angle : ',angle
@@ -436,6 +436,7 @@ class ESP300(QtGui.QWidget):
                         self.ser.write(string.encode('ascii'))
                         print 'trying to abort'
                         frac = 0
+                        self.ui.progressBar_Circle.setValue(0)
                         break
 
                 #time.sleep(.1)
@@ -456,6 +457,7 @@ class ESP300(QtGui.QWidget):
        
         if self.cutCircle :
             self.ui.showMessage ('Circle tracing complete')
+            self.ui.progressBar_Circle.setValue(0)
         else :
             self.ui.showMessage ('Circle tracing aborted!')
 
